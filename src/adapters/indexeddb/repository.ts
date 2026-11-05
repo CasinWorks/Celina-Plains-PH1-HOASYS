@@ -365,9 +365,6 @@ export function createIndexedDbRepository(
       if (cmpMoney(input.amount, "0") <= 0) {
         throw new Error("Amount must be greater than zero.");
       }
-      if (!input.proofBlob) {
-        throw new Error("Proof of payment is required.");
-      }
       const lot = await db.lots.get(input.lotId);
       if (!lot) throw new Error("Lot not found.");
       if (
@@ -387,14 +384,6 @@ export function createIndexedDbRepository(
           return Number.isFinite(n) && n > max ? n : max;
         }, 0) + 1;
       const paymentNo = `PAY-${year}-${String(seq).padStart(5, "0")}`;
-      const proofKey = createId("proof");
-      await files.put(proofKey, input.proofBlob, {
-        fileName: input.proofFileName ?? "proof",
-        mimeType:
-          input.proofMimeType ??
-          input.proofBlob.type ??
-          "application/octet-stream",
-      });
 
       const payment: Payment = {
         id: createId("pay"),
@@ -406,12 +395,9 @@ export function createIndexedDbRepository(
         amount: money(input.amount),
         method: input.method,
         payerReference: input.payerReference,
-        proofStorageKey: proofKey,
-        proofFileName: input.proofFileName ?? "proof",
-        proofMimeType:
-          input.proofMimeType ??
-          input.proofBlob.type ??
-          "application/octet-stream",
+        proofStorageKey: null,
+        proofFileName: null,
+        proofMimeType: null,
         status: "pending",
         orNumber: "",
         verifiedByUserId: null,

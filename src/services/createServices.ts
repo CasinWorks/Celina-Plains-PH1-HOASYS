@@ -1,6 +1,5 @@
 import { createFirebaseAuthService } from "../adapters/firebase/authService";
 import { isFirebaseEnabled } from "../adapters/firebase/app";
-import { createFirebaseFileStorage } from "../adapters/firebase/fileStorage";
 import { createFirebaseRepository } from "../adapters/firebase/repository";
 import { attachCloudSync, type CloudSync } from "../adapters/firebase/sync";
 import { createIndexedDbAuthService } from "../adapters/indexeddb/authService";
@@ -18,7 +17,7 @@ export function createServices(): HoaServices {
   const db = getDb();
   if (isFirebaseEnabled()) {
     cloud = attachCloudSync(db);
-    const files = createFirebaseFileStorage();
+    const files = createIndexedDbFileStorage(db);
     const auth = createFirebaseAuthService(db, cloud);
     const repo = createFirebaseRepository(db, files, cloud);
     return { auth, repo, files };

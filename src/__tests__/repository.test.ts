@@ -46,6 +46,53 @@ describe("IndexedDB repository (Phase 1 money flows)", () => {
     await db.delete();
   });
 
+  it("registers a homeowner on a new lot and lets them sign in", async () => {
+    await auth.logout();
+    const session = await auth.register({
+      fullName: "Ana Reyes",
+      username: "Ana.Reyes",
+      password: "house1234",
+      mobile: "09170000000",
+      lotCode: "b3-l12",
+    });
+    expect(session.roles).toEqual(["homeowner"]);
+    expect(session.username).toBe("ana.reyes");
+    expect(session.consentPrivacyAt).toBeTruthy();
+    const lot = (await repo.listLots()).find((row) => row.lotCode === "B3-L12");
+    expect(lot?.householdName).toBe("Ana Reyes");
+    expect(lot?.block).toBe("3");
+    expect(lot?.street).toBe("");
+    expect(lot?.residentUserIds).toContain(session.userId);
+    await auth.logout();
+    const again = await auth.login("ana.reyes", "house1234");
+    expect(again.userId).toBe(session.userId);
+  });
+
+  it("links a new homeowner to an existing lot", async () => {
+    await auth.logout();
+    const before = (await repo.listLots()).find((row) => row.lotCode === "B1-L02")!;
+    const session = await auth.register({
+      fullName: "New Resident",
+      username: "new.resident",
+      password: "house1234",
+      mobile: "",
+      lotCode: "b1-l02",
+    });
+    const after = await repo.getLot(before.id);
+    expect(after?.householdName).toBe(before.householdName);
+    expect(after?.residentUserIds).toContain(session.userId);
+    expect(session.lotIds).toEqual([before.id]);
+    await expect(
+      auth.register({
+        fullName: "Other Person",
+        username: "new.resident",
+        password: "house1234",
+        mobile: "",
+        lotCode: "B9-L01",
+      }),
+    ).rejects.toThrow(/already registered/i);
+  });
+
   it("seeds demo users for each role and sample lots/dues", async () => {
     const users = await repo.listUsers();
     expect(users.map((u) => u.username).sort()).toEqual(

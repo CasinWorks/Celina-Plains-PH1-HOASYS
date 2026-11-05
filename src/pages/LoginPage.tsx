@@ -135,6 +135,9 @@ export function LoginPage() {
           </div>
         </form>
 
+        <p className="login-public-link">
+          <Link to="/register">{t("login.register")}</Link>
+        </p>
         <p className="login-demo-label">{t("login.demoHint", { password: DEMO_PASSWORD })}</p>
         <div className="demo-chip-row">
           <button

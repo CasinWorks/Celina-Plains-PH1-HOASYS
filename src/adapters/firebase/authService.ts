@@ -1,4 +1,5 @@
 import {
+  createUserWithEmailAndPassword,
   EmailAuthProvider,
   onAuthStateChanged,
   reauthenticateWithCredential,
@@ -9,6 +10,7 @@ import {
 import type { Session, UserAccount } from "../../domain/types";
 import { nowIso } from "../../lib/ids";
 import type { AuthService } from "../../services/interfaces";
+import { createHomeownerAccount, normalizeUsername } from "../registerHomeowner";
 import { SESSION_KEY } from "../indexeddb/authService";
 import type { HoaDatabase } from "../indexeddb/db";
 import { getFirebaseAuth } from "./app";
@@ -72,6 +74,48 @@ export function createFirebaseAuthService(
           await sync.endLiveSession().catch(() => undefined);
           await signOut(getFirebaseAuth()).catch(() => undefined);
         }
+        throw explainFirebaseError(error);
+      }
+    },
+
+    async register(input) {
+      const username = normalizeUsername(input.username);
+      if (input.password.length < 8) {
+        throw new Error("Password must be at least 8 characters.");
+      }
+      const existing = await db.users.where("username").equals(username).first();
+      if (existing) throw new Error("That username is already registered.");
+      let uid = "";
+      try {
+        const created = await createUserWithEmailAndPassword(
+          getFirebaseAuth(),
+          usernameToEmail(username),
+          input.password,
+        );
+        uid = created.user.uid;
+        sync.registerUids(new Map([[username, uid]]));
+        await sync.beginLiveSession();
+        const again = await db.users.where("username").equals(username).first();
+        if (again) throw new Error("That username is already registered.");
+        const user = await createHomeownerAccount(db, {
+          ...input,
+          username,
+          firebaseUid: uid,
+        });
+        await sync.flush();
+        return toSession(user);
+      } catch (error) {
+        if (getFirebaseAuth().currentUser) {
+          await signOut(getFirebaseAuth()).catch(() => undefined);
+        }
+        const code =
+          typeof error === "object" && error && "code" in error
+            ? String((error as { code: string }).code)
+            : "";
+        if (code === "auth/email-already-in-use") {
+          throw new Error("That username is already registered.");
+        }
+        if (error instanceof Error && !("code" in error)) throw error;
         throw explainFirebaseError(error);
       }
     },

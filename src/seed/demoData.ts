@@ -54,7 +54,7 @@ function siteConfig(): SiteConfig {
     ...DEFAULT_SITE_CONFIG,
     hoaContact: "Cash is paid to the treasurer.",
     paymentInstructions:
-      "GCash: scan the QR on the welcome page. Cash: pay the treasurer in person.",
+      "GCash: scan the QR on the welcome page, then send the screenshot to the treasurer on Messenger. Cash: pay the treasurer in person.",
     openingCashBalance: "25000.00",
     updatedAt: nowIso(),
   };
@@ -385,7 +385,7 @@ function announcements(): Announcement[] {
     {
       id: IDS.ann2,
       title: "DEMO — October dues reminder",
-      body: "Please settle October dues on or before the 15th. Upload proof in Payments.",
+      body: "Please settle October dues on or before the 15th. Send the screenshot to the treasurer on Messenger.",
       pinned: false,
       authorUserId: IDS.treasurer,
       authorName: DEMO_USERS.treasurer.fullName,

@@ -1,3 +1,4 @@
+import { createHomeownerAccount } from "../registerHomeowner";
 import type { Role, Session, UserAccount } from "../../domain/types";
 import { nowIso } from "../../lib/ids";
 import type { AuthService } from "../../services/interfaces";
@@ -29,6 +30,13 @@ export function createIndexedDbAuthService(
       if (!user || !user.isActive || user.password !== password) {
         throw new Error("Invalid username or password.");
       }
+      const session = toSession(user);
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      return session;
+    },
+
+    async register(input) {
+      const user = await createHomeownerAccount(db, input);
       const session = toSession(user);
       localStorage.setItem(SESSION_KEY, JSON.stringify(session));
       return session;

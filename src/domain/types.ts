@@ -160,7 +160,7 @@ export interface Payment {
   amount: string;
   method: PaymentMethod;
   payerReference: string;
-  /** Storage key / object path for proof file (IndexedDB blob id or future Firebase Storage path). */
+  /** Kept empty. The screenshot is sent to the treasurer on Messenger. */
   proofStorageKey: string | null;
   proofFileName: string | null;
   proofMimeType: string | null;

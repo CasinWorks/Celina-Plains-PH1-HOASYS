@@ -11,14 +11,12 @@ export function readFirebaseConfig(): FirebaseOptions | null {
   const authDomain = env.VITE_FIREBASE_AUTH_DOMAIN?.trim();
   const projectId = env.VITE_FIREBASE_PROJECT_ID?.trim();
   const appId = env.VITE_FIREBASE_APP_ID?.trim();
-  const storageBucket = env.VITE_FIREBASE_STORAGE_BUCKET?.trim();
-  if (!apiKey || !authDomain || !projectId || !appId || !storageBucket) return null;
+  if (!apiKey || !authDomain || !projectId || !appId) return null;
   return {
     apiKey,
     authDomain,
     projectId,
     appId,
-    storageBucket,
     messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID?.trim() || undefined,
   };
 }

@@ -18,6 +18,7 @@ import { OfficersPage } from "./pages/OfficersPage";
 import { PaymentsPage } from "./pages/PaymentsPage";
 import { PlansPage } from "./pages/PlansPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
+import { RegisterPage } from "./pages/RegisterPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { VotingPage } from "./pages/VotingPage";
@@ -29,6 +30,7 @@ export default function App() {
         <Routes>
           <Route path="/welcome" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/officers" element={<OfficersPage />} />
           <Route
             path="/privacy"

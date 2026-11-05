@@ -11,7 +11,7 @@ export const DEFAULT_SITE_CONFIG = {
   penaltyGraceDays: 15,
   penaltyCompounding: false,
   paymentInstructions:
-    "GCash: scan the QR on the welcome page. Cash: pay the treasurer in person.",
+    "GCash: scan the QR on the welcome page, then send the screenshot to the treasurer on Messenger. Cash: pay the treasurer in person.",
   hoaContact: "Cash is paid to the treasurer.",
   openingCashBalance: "0.00",
 } as const;

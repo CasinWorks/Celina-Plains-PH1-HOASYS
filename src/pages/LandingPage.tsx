@@ -81,7 +81,6 @@ export function LandingPage() {
         <img src="/landing/evening.jpg" alt={t("landing.streetAlt")} />
         <div className="landing-hero-shade" aria-hidden="true" />
         <div className="landing-hero-copy">
-          <BrandMark className="landing-seal" label={t("landing.sealAlt")} />
           <p className="login-eyebrow">{t("landing.kicker")}</p>
           <h1>{t("landing.title")}</h1>
           <p className="landing-lead">{t("landing.lead")}</p>
@@ -89,6 +88,11 @@ export function LandingPage() {
             <Link className="btn landing-btn-paper" to={session ? "/" : "/login"}>
               {session ? t("landing.enter") : t("landing.signIn")}
             </Link>
+            {!session && (
+              <Link className="btn landing-btn-ghost" to="/register">
+                {t("landing.register")}
+              </Link>
+            )}
             <Link className="btn landing-btn-ghost" to="/officers">
               {t("landing.candidates")}
             </Link>

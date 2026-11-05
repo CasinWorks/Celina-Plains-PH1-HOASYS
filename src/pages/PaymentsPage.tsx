@@ -23,7 +23,6 @@ export function PaymentsPage() {
   const [method, setMethod] = useState<PaymentMethod>("gcash");
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
-  const [file, setFile] = useState<File | null>(null);
   const [duesId, setDuesId] = useState<string | null>(null);
   const [duesPeriod, setDuesPeriod] = useState<string | null>(null);
 
@@ -86,10 +85,6 @@ export function PaymentsPage() {
     if (!session) return;
     setError("");
     setMessage("");
-    if (!file) {
-      setError(t("payments.proofRequired"));
-      return;
-    }
     try {
       await getServices().repo.submitPayment(
         {
@@ -98,9 +93,6 @@ export function PaymentsPage() {
           method,
           payerReference: reference,
           notes,
-          proofBlob: file,
-          proofFileName: file.name,
-          proofMimeType: file.type,
           intendedDuesIds: duesId ? [duesId] : undefined,
         },
         session,
@@ -109,7 +101,6 @@ export function PaymentsPage() {
       setAmount("");
       setReference("");
       setNotes("");
-      setFile(null);
       setDuesId(null);
       setDuesPeriod(null);
       await load();
@@ -197,6 +188,7 @@ export function PaymentsPage() {
             {t("payments.payingForPeriod", { period: duesPeriod })}
           </div>
         )}
+        <p className="hint">{t("payments.messengerNote")}</p>
         <form onSubmit={submitPayment}>
           <div className="form-field">
             <label htmlFor="lot">{t("common.lot")}</label>
@@ -248,17 +240,6 @@ export function PaymentsPage() {
               value={reference}
               onChange={(e) => setReference(e.target.value)}
             />
-          </div>
-          <div className="form-field">
-            <label htmlFor="proof">{t("common.proof")}</label>
-            <input
-              id="proof"
-              type="file"
-              accept="image/jpeg,image/png,image/webp,application/pdf"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              required
-            />
-            <span className="hint">{t("payments.proofHint")}</span>
           </div>
           <div className="form-field">
             <label htmlFor="notes">{t("common.notes")}</label>

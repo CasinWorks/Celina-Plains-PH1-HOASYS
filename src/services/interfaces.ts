@@ -33,8 +33,17 @@ import type {
   VoteChoice,
 } from "../domain/types";
 
+export interface RegisterHomeownerInput {
+  fullName: string;
+  username: string;
+  password: string;
+  mobile: string;
+  lotCode: string;
+}
+
 export interface AuthService {
   login(username: string, password: string): Promise<Session>;
+  register(input: RegisterHomeownerInput): Promise<Session>;
   logout(): Promise<void>;
   getSession(): Promise<Session | null>;
   changePassword(userId: string, current: string, next: string): Promise<void>;

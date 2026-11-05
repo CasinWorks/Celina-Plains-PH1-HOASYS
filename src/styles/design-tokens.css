@@ -1514,6 +1514,21 @@ svg {
   border-color: var(--primary);
 }
 
+.register-consent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: var(--tap-min);
+  margin: 0.25rem 0 1rem;
+  font-size: var(--fs-body);
+}
+
+.register-consent input {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--gold);
+}
+
 .login-public-link {
   margin: 1.25rem 0 0;
 }
@@ -1592,9 +1607,11 @@ svg {
 
 .landing-hero {
   position: relative;
-  min-height: min(78vh, 760px);
   display: grid;
   align-items: end;
+  width: 100%;
+  height: clamp(440px, 48vw, 680px);
+  overflow: hidden;
 }
 
 .landing-hero > img {
@@ -1603,6 +1620,7 @@ svg {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 58%;
 }
 
 .landing-hero-shade {
@@ -1611,10 +1629,9 @@ svg {
   background:
     linear-gradient(
       to top,
-      rgba(12, 13, 16, 0.94) 0%,
-      rgba(12, 13, 16, 0.88) 38%,
-      rgba(12, 13, 16, 0.35) 68%,
-      rgba(12, 13, 16, 0.2) 100%
+      rgba(12, 13, 16, 0.9) 0%,
+      rgba(12, 13, 16, 0.45) 24%,
+      rgba(12, 13, 16, 0) 46%
     );
 }
 
@@ -1623,14 +1640,14 @@ svg {
   z-index: 1;
   width: min(920px, calc(100% - 3rem));
   margin: 0 auto;
-  padding: 4rem 0 3.5rem;
+  padding: 0 0 2rem;
 }
 
 .landing-hero .login-eyebrow {
-  margin: 0 0 0.85rem;
+  margin: 0 0 0.45rem;
   max-width: 16ch;
   font-family: var(--font-display);
-  font-size: clamp(2.75rem, 7vw, 4.75rem);
+  font-size: clamp(2rem, 4vw, 3.15rem);
   font-weight: 500;
   letter-spacing: -0.03em;
   line-height: 1.02;
@@ -1640,7 +1657,7 @@ svg {
 }
 
 .landing-hero h1 {
-  margin: 0 0 0.85rem;
+  margin: 0 0 0.35rem;
   max-width: 22ch;
   font-family: var(--font-display);
   font-weight: 500;
@@ -1658,11 +1675,35 @@ svg {
   font-size: var(--fs-body);
 }
 
+@media (max-width: 800px) {
+  .landing-hero {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+
+  .landing-hero > img {
+    position: relative;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-position: center 40%;
+  }
+
+  .landing-hero-shade {
+    display: none;
+  }
+
+  .landing-hero-copy {
+    padding: 1.35rem 0 1.75rem;
+  }
+}
+
 .landing-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 1.75rem;
+  margin-top: 1rem;
 }
 
 .landing-btn-paper {

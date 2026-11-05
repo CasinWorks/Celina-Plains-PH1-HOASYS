@@ -9,11 +9,13 @@ import {
 } from "react";
 import type { Role, Session } from "../domain/types";
 import { getServices } from "../services/createServices";
+import type { RegisterHomeownerInput } from "../services/interfaces";
 
 type AuthState = {
   session: Session | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
+  register: (input: RegisterHomeownerInput) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   acceptPrivacy: () => Promise<void>;
@@ -48,6 +50,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       async login(username, password) {
         const s = await services.auth.login(username, password);
+        setSession(s);
+      },
+      async register(input) {
+        const s = await services.auth.register(input);
         setSession(s);
       },
       async logout() {
