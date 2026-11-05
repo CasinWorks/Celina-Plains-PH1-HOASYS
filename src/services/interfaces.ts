@@ -98,6 +98,11 @@ export interface HoaRepository {
   linkUserToLot(userId: string, lotId: string, actor: Session): Promise<void>;
   approveHomeownerApplication(userId: string, actor: Session): Promise<UserAccount>;
   rejectHomeownerApplication(userId: string, actor: Session): Promise<void>;
+  setMemberAccess(
+    userId: string,
+    access: { officer: boolean; treasurer: boolean },
+    actor: Session,
+  ): Promise<UserAccount>;
 
   // Dues
   listDues(filter?: { lotId?: string }): Promise<DuesCharge[]>;

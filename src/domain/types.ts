@@ -8,7 +8,7 @@
  *   or embed display fields needed on the document itself.
  */
 
-export type Role = "homeowner" | "officer" | "treasurer";
+export type Role = "homeowner" | "officer" | "treasurer" | "admin";
 
 export type DuesStatus = "unpaid" | "partial" | "paid" | "waived";
 export type PaymentStatus = "pending" | "verified" | "rejected";

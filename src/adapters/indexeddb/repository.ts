@@ -227,6 +227,42 @@ export function createIndexedDbRepository(
       await rejectHomeownerRecord(db, userId, actor);
     },
 
+    async setMemberAccess(userId, access, actor) {
+      if (!actor.roles.includes("admin")) {
+        throw new Error("Only an admin can assign access.");
+      }
+      const user = await db.users.get(userId);
+      if (!user) throw new Error("That person was not found.");
+      if (user.roles.includes("admin")) {
+        throw new Error("The admin account stays as it is.");
+      }
+      if (
+        user.approvalStatus === "pending" ||
+        user.approvalStatus === "rejected"
+      ) {
+        throw new Error("Verify the homeowner before assigning access.");
+      }
+      if (!user.roles.includes("homeowner")) {
+        throw new Error("Access is assigned to a homeowner.");
+      }
+      const roles: UserAccount["roles"] = ["homeowner"];
+      if (access.officer) roles.push("officer");
+      if (access.treasurer) roles.push("treasurer");
+      const next: UserAccount = { ...user, roles, updatedAt: nowIso() };
+      await db.users.put(next);
+      await writeAudit(db, {
+        entity: "user",
+        entityId: user.id,
+        action: "update",
+        before: { roles: user.roles },
+        after: { roles },
+        actorUserId: actor.userId,
+        actorName: actor.fullName,
+        note: "Admin assigned access",
+      });
+      return next;
+    },
+
     async linkUserToLot(userId, lotId, actor) {
       const user = await db.users.get(userId);
       const lot = await db.lots.get(lotId);

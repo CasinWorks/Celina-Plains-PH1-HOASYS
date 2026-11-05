@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } fr
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
+import type { Role } from "../domain/types";
 import { isFirebaseEnabled, subscribeDataChanges } from "../services/createServices";
 import { HOA_NAME } from "../lib/config";
 import { BrandMark } from "./BrandMark";
@@ -26,7 +27,7 @@ type NavItem = {
   labelKey: string;
   icon: ReactNode;
   group: NavGroup;
-  roles?: Array<"homeowner" | "officer" | "treasurer">;
+  roles?: Role[];
 };
 
 const NAV: NavItem[] = [
@@ -59,6 +60,13 @@ const NAV: NavItem[] = [
     group: "community",
   },
   { to: "/vote", labelKey: "nav.voting", icon: <IconPay />, group: "community" },
+  {
+    to: "/access",
+    labelKey: "nav.access",
+    icon: <IconSettings />,
+    group: "house",
+    roles: ["admin"],
+  },
   { to: "/plans", labelKey: "nav.plans", icon: <IconHome />, group: "community" },
   {
     to: "/feedback",

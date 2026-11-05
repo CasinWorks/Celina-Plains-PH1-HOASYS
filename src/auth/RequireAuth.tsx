@@ -65,4 +65,5 @@ export const ROUTE_POLICY = {
   settings: ["treasurer"] as Role[],
   audit: ["treasurer"] as Role[],
   verifyPayment: ["treasurer"] as Role[],
+  access: ["admin"] as Role[],
 } as const;

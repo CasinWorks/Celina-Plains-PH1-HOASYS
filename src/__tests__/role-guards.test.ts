@@ -27,6 +27,12 @@ describe("role route guards", () => {
     expect(canAccessRoute(roles, ROUTE_POLICY.settings)).toBe(false);
   });
 
+  it("lets only an admin open access", () => {
+    expect(canAccessRoute(["homeowner"], ROUTE_POLICY.access)).toBe(false);
+    expect(canAccessRoute(["officer"], ROUTE_POLICY.access)).toBe(false);
+    expect(canAccessRoute(["admin"], ROUTE_POLICY.access)).toBe(true);
+  });
+
   it("allows treasurer full money admin routes", () => {
     const roles: Role[] = ["treasurer"];
     expect(canAccessRoute(roles, ROUTE_POLICY.expenses)).toBe(true);

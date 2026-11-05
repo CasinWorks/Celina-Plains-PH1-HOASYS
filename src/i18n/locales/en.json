@@ -43,12 +43,14 @@
     "feedback": "Feedback",
     "plans": "HOA plans",
     "officers": "2026 candidates",
-    "voting": "Voting"
+    "voting": "Voting",
+    "access": "Access"
   },
   "roles": {
     "homeowner": "Homeowner",
     "officer": "Officer",
-    "treasurer": "Treasurer"
+    "treasurer": "Treasurer",
+    "admin": "Admin"
   },
   "common": {
     "save": "Save",
@@ -447,6 +449,20 @@
       "treasurer": "Treasurer",
       "auditor": "Auditor"
     }
+  },
+  "access": {
+    "title": "Access",
+    "lead": "Grant officer or treasurer access to a verified homeowner. The names below are the posted 2026 candidates, not a certified result.",
+    "slate": "Posted candidates",
+    "slateLead": "Match a homeowner to a name on this list, then grant the access that seat needs.",
+    "homeowners": "Homeowners",
+    "empty": "No verified homeowners yet.",
+    "makeOfficer": "Grant officer",
+    "removeOfficer": "Remove officer",
+    "makeTreasurer": "Grant treasurer",
+    "removeTreasurer": "Remove treasurer",
+    "saved": "Access updated for {{name}}.",
+    "blockSeat": "Block {{blocks}}"
   },
   "voting": {
     "kicker": "CPI-1 HOA · {{year}}",

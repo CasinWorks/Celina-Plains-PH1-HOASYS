@@ -43,12 +43,14 @@
     "feedback": "Feedback",
     "plans": "Mga plano ng HOA",
     "officers": "Mga kandidato 2026",
-    "voting": "Pagboto"
+    "voting": "Pagboto",
+    "access": "Access"
   },
   "roles": {
     "homeowner": "Homeowner",
     "officer": "Officer",
-    "treasurer": "Treasurer"
+    "treasurer": "Treasurer",
+    "admin": "Admin"
   },
   "common": {
     "save": "I-save",
@@ -447,6 +449,20 @@
       "treasurer": "Treasurer",
       "auditor": "Auditor"
     }
+  },
+  "access": {
+    "title": "Access",
+    "lead": "Bigyan ng officer o treasurer access ang na-verify na homeowner. Ang mga pangalan sa ibaba ay mga kandidatong naka-post para sa 2026, hindi sertipikadong resulta.",
+    "slate": "Mga kandidatong naka-post",
+    "slateLead": "Itugma ang homeowner sa pangalan sa listahang ito, tapos ibigay ang access na kailangan ng puwesto.",
+    "homeowners": "Mga homeowner",
+    "empty": "Wala pang na-verify na homeowner.",
+    "makeOfficer": "Ibigay ang officer",
+    "removeOfficer": "Alisin ang officer",
+    "makeTreasurer": "Ibigay ang treasurer",
+    "removeTreasurer": "Alisin ang treasurer",
+    "saved": "Na-update ang access ni {{name}}.",
+    "blockSeat": "Block {{blocks}}"
   },
   "voting": {
     "kicker": "CPI-1 HOA · {{year}}",

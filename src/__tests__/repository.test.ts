@@ -105,6 +105,40 @@ describe("IndexedDB repository (Phase 1 money flows)", () => {
     ).rejects.toThrow(/officer/i);
   });
 
+  it("lets an admin grant officer access and keeps the homeowner role", async () => {
+    const homeownerUser = (await repo.listUsers()).find(
+      (user) => user.username === DEMO_USERS.homeowner.username,
+    )!;
+    const admin: Session = {
+      userId: "user_admin",
+      username: "admin",
+      fullName: "HOA Admin",
+      roles: ["admin"],
+      lotIds: [],
+      consentPrivacyAt: new Date().toISOString(),
+      loggedInAt: new Date().toISOString(),
+    };
+    const granted = await repo.setMemberAccess(
+      homeownerUser.id,
+      { officer: true, treasurer: false },
+      admin,
+    );
+    expect(granted.roles).toEqual(["homeowner", "officer"]);
+    const removed = await repo.setMemberAccess(
+      homeownerUser.id,
+      { officer: false, treasurer: true },
+      admin,
+    );
+    expect(removed.roles).toEqual(["homeowner", "treasurer"]);
+    await expect(
+      repo.setMemberAccess(
+        homeownerUser.id,
+        { officer: true, treasurer: false },
+        homeowner,
+      ),
+    ).rejects.toThrow(/admin/i);
+  });
+
   it("lets an officer add a homeowner without taking over the session", async () => {
     const officer = await auth.login(DEMO_USERS.officer.username, DEMO_PASSWORD);
     const added = await auth.provisionHomeowner(
