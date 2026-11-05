@@ -18,9 +18,9 @@ const SCENES = [
     span: true,
   },
   {
-    src: "/landing/garden.jpg",
-    altKey: "landing.gardenAlt",
-    captionKey: "landing.garden",
+    src: "/landing/houses.jpg",
+    altKey: "landing.housesAlt",
+    captionKey: "landing.houses",
     span: false,
   },
   {
