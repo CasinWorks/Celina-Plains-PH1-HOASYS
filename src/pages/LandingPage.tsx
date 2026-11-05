@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
+import { BrandMark } from "../components/BrandMark";
 import { LanguageSwitch } from "../components/LanguageSwitch";
 import { PayOptions } from "../components/PayOptions";
 import { PoweredByCasinWorks } from "../components/PoweredByCasinWorks";
@@ -65,9 +66,7 @@ export function LandingPage() {
     <div className="landing">
       <header className="public-top landing-top">
         <Link to="/welcome" className="brand-wordmark">
-          <span className="brand-blob" aria-hidden="true">
-            CP
-          </span>
+          <BrandMark />
           <span>{t("app.shortName")}</span>
         </Link>
         <div className="landing-top-actions">
@@ -82,6 +81,7 @@ export function LandingPage() {
         <img src="/landing/evening.jpg" alt={t("landing.streetAlt")} />
         <div className="landing-hero-shade" aria-hidden="true" />
         <div className="landing-hero-copy">
+          <BrandMark className="landing-seal" label={t("landing.sealAlt")} />
           <p className="login-eyebrow">{t("landing.kicker")}</p>
           <h1>{t("landing.title")}</h1>
           <p className="landing-lead">{t("landing.lead")}</p>
@@ -108,25 +108,33 @@ export function LandingPage() {
         ))}
       </section>
 
-      <section className="landing-steps" aria-label={t("landing.stepsTitle")}>
-        <h2>{t("landing.stepsTitle")}</h2>
-        <ol>
-          <li>{t("landing.stepSignIn")}</li>
-          <li>{t("landing.stepDue")}</li>
-          <li>{t("landing.stepProof")}</li>
-        </ol>
-        {notice?.eventDate && (
-          <p className="landing-next">
-            {t("landing.nextGathering", {
-              title: notice.title,
-              date: formatGathering(notice.eventDate),
-            })}
-          </p>
-        )}
-      </section>
-
       <section className="landing-sheet">
         <div className="landing-sheet-inner">
+          <section className="use-strip" aria-label={t("landing.stepsTitle")}>
+            <h2>{t("landing.stepsTitle")}</h2>
+            <ol>
+              <li>
+                <span>01</span>
+                {t("landing.stepSignIn")}
+              </li>
+              <li>
+                <span>02</span>
+                {t("landing.stepDue")}
+              </li>
+              <li>
+                <span>03</span>
+                {t("landing.stepProof")}
+              </li>
+            </ol>
+            {notice?.eventDate && (
+              <p className="landing-next">
+                {t("landing.nextGathering", {
+                  title: notice.title,
+                  date: formatGathering(notice.eventDate),
+                })}
+              </p>
+            )}
+          </section>
           <PayOptions />
           {contact && <p className="landing-contact">{contact}</p>}
         </div>

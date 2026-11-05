@@ -34,6 +34,9 @@
     "logout": "Log out",
     "changePassword": "Change password",
     "more": "More",
+    "community": "Community",
+    "office": "Office",
+    "groupHouse": "Your house",
     "account": "Account",
     "announcements": "Announcements",
     "documents": "Documents",
@@ -124,6 +127,7 @@
   },
   "landing": {
     "kicker": "Celina Plains Phase 1",
+    "sealAlt": "Celina Plains Homeowners' Association, Imus. HLURB Reg. No. 14844",
     "title": "A quieter way home.",
     "lead": "Dues, payments, notices, and this year’s vote, kept in one resident ledger.",
     "signIn": "Sign in",

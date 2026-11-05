@@ -1,9 +1,10 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
 import { isFirebaseEnabled, subscribeDataChanges } from "../services/createServices";
 import { HOA_NAME } from "../lib/config";
+import { BrandMark } from "./BrandMark";
 import { LanguageSwitch } from "./LanguageSwitch";
 import { PoweredByCasinWorks } from "./PoweredByCasinWorks";
 import { TextSizeToggle } from "./TextSizeToggle";
@@ -18,88 +19,79 @@ import {
   IconSettings,
 } from "./NavIcons";
 
+type NavGroup = "house" | "community" | "office";
+
 type NavItem = {
   to: string;
   labelKey: string;
   icon: ReactNode;
-  primary?: boolean;
+  group: NavGroup;
   roles?: Array<"homeowner" | "officer" | "treasurer">;
 };
 
 const NAV: NavItem[] = [
-  { to: "/", labelKey: "nav.dashboard", icon: <IconHome />, primary: true },
-  { to: "/my-lot", labelKey: "nav.myLot", icon: <IconLot />, primary: true },
-  { to: "/dues", labelKey: "nav.dues", icon: <IconDues />, primary: true },
-  {
-    to: "/payments",
-    labelKey: "nav.payments",
-    icon: <IconPay />,
-    primary: true,
-  },
-  {
-    to: "/reports",
-    labelKey: "nav.reports",
-    icon: <IconReport />,
-    primary: true,
-  },
+  { to: "/", labelKey: "nav.dashboard", icon: <IconHome />, group: "house" },
+  { to: "/my-lot", labelKey: "nav.myLot", icon: <IconLot />, group: "house" },
+  { to: "/dues", labelKey: "nav.dues", icon: <IconDues />, group: "house" },
+  { to: "/payments", labelKey: "nav.payments", icon: <IconPay />, group: "house" },
   {
     to: "/announcements",
     labelKey: "nav.announcements",
     icon: <IconReport />,
-    primary: true,
+    group: "community",
   },
   {
     to: "/documents",
     labelKey: "nav.documents",
     icon: <IconReport />,
-    primary: true,
+    group: "community",
+  },
+  {
+    to: "/reports",
+    labelKey: "nav.reports",
+    icon: <IconReport />,
+    group: "community",
   },
   {
     to: "/officers",
     labelKey: "nav.officers",
     icon: <IconAudit />,
-    primary: true,
+    group: "community",
   },
-  {
-    to: "/vote",
-    labelKey: "nav.voting",
-    icon: <IconPay />,
-    primary: true,
-  },
-  {
-    to: "/plans",
-    labelKey: "nav.plans",
-    icon: <IconHome />,
-    primary: true,
-  },
+  { to: "/vote", labelKey: "nav.voting", icon: <IconPay />, group: "community" },
+  { to: "/plans", labelKey: "nav.plans", icon: <IconHome />, group: "community" },
   {
     to: "/feedback",
     labelKey: "nav.feedback",
     icon: <IconAudit />,
-    primary: true,
+    group: "community",
   },
   {
     to: "/lots",
     labelKey: "nav.lots",
     icon: <IconLot />,
+    group: "office",
     roles: ["officer", "treasurer"],
   },
   {
     to: "/expenses",
     labelKey: "nav.expenses",
     icon: <IconExpense />,
+    group: "office",
     roles: ["treasurer"],
   },
   {
     to: "/audit",
     labelKey: "nav.audit",
     icon: <IconAudit />,
+    group: "office",
     roles: ["treasurer"],
   },
   {
     to: "/settings",
     labelKey: "nav.settings",
     icon: <IconSettings />,
+    group: "office",
     roles: ["treasurer"],
   },
 ];
@@ -111,6 +103,91 @@ function initials(name: string) {
     .slice(0, 2)
     .map((p) => p[0]?.toUpperCase() ?? "")
     .join("");
+}
+
+function NavMenu({
+  label,
+  open,
+  active,
+  menuId,
+  wrapRef,
+  items,
+  onToggle,
+  onNavigate,
+  t,
+}: {
+  label: string;
+  open: boolean;
+  active: boolean;
+  menuId: string;
+  wrapRef: RefObject<HTMLDivElement | null>;
+  items: NavItem[];
+  onToggle: () => void;
+  onNavigate: () => void;
+  t: (key: string) => string;
+}) {
+  return (
+    <div className="nav-dropdown" ref={wrapRef}>
+      <button
+        type="button"
+        className={`nav-link nav-dropdown-trigger ${open || active ? "is-active" : ""}`}
+        aria-expanded={open}
+        aria-controls={menuId}
+        aria-haspopup="menu"
+        onClick={onToggle}
+      >
+        {label}
+        <span aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div id={menuId} className="dropdown-panel" role="menu" aria-label={label}>
+          {items.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              role="menuitem"
+              className="dropdown-item"
+              onClick={onNavigate}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              {t(item.labelKey)}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileGroup({
+  label,
+  items,
+  onNavigate,
+  t,
+}: {
+  label: string;
+  items: NavItem[];
+  onNavigate: () => void;
+  t: (key: string) => string;
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mobile-nav-group">
+      <p className="mobile-nav-label">{label}</p>
+      {items.map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          end={item.to === "/"}
+          className="nav-link mobile-nav-link"
+          onClick={onNavigate}
+        >
+          <span className="nav-icon">{item.icon}</span>
+          {t(item.labelKey)}
+        </NavLink>
+      ))}
+    </div>
+  );
 }
 
 function useClickOutside(
@@ -144,24 +221,27 @@ export function AppLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cloudRev, setCloudRev] = useState(0);
-  const [moreOpen, setMoreOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<NavGroup | null>(null);
   const [accountOpen, setAccountOpen] = useState(false);
 
-  const moreWrapRef = useRef<HTMLDivElement>(null);
+  const communityWrapRef = useRef<HTMLDivElement>(null);
+  const officeWrapRef = useRef<HTMLDivElement>(null);
   const accountWrapRef = useRef<HTMLDivElement>(null);
   const mobilePanelRef = useRef<HTMLDivElement>(null);
-  const moreMenuId = useId();
+  const communityMenuId = useId();
+  const officeMenuId = useId();
   const accountMenuId = useId();
   const mobileNavId = useId();
 
-  useClickOutside(moreOpen, () => setMoreOpen(false), [moreWrapRef]);
+  useClickOutside(openMenu === "community", () => setOpenMenu(null), [communityWrapRef]);
+  useClickOutside(openMenu === "office", () => setOpenMenu(null), [officeWrapRef]);
   useClickOutside(accountOpen, () => setAccountOpen(false), [accountWrapRef]);
 
   useEffect(() => subscribeDataChanges(() => setCloudRev((n) => n + 1)), []);
 
   useEffect(() => {
     setMobileOpen(false);
-    setMoreOpen(false);
+    setOpenMenu(null);
     setAccountOpen(false);
   }, [location.pathname]);
 
@@ -186,13 +266,17 @@ export function AppLayout() {
   const items = NAV.filter(
     (item) => !item.roles || item.roles.some((r) => hasRole(r)),
   );
-  const primaryItems = items.filter((item) => item.primary);
-  const moreItems = items.filter((item) => !item.primary);
-  const moreActive = moreItems.some(
-    (item) =>
-      location.pathname === item.to ||
-      (item.to !== "/" && location.pathname.startsWith(item.to)),
-  );
+  const houseItems = items.filter((item) => item.group === "house");
+  const communityItems = items.filter((item) => item.group === "community");
+  const officeItems = items.filter((item) => item.group === "office");
+
+  function groupActive(group: NavItem[]) {
+    return group.some(
+      (item) =>
+        location.pathname === item.to ||
+        (item.to !== "/" && location.pathname.startsWith(item.to)),
+    );
+  }
 
   function closeMobile() {
     setMobileOpen(false);
@@ -213,7 +297,7 @@ export function AppLayout() {
           aria-controls={mobileNavId}
           onClick={() => {
             setMobileOpen((v) => !v);
-            setMoreOpen(false);
+            setOpenMenu(null);
             setAccountOpen(false);
           }}
         >
@@ -222,16 +306,14 @@ export function AppLayout() {
         </button>
 
         <NavLink to="/" className="brand-wordmark" end onClick={closeMobile}>
-          <span className="brand-blob" aria-hidden="true">
-            CP
-          </span>
+          <BrandMark />
           <span className="brand-label">{t("app.shortName")}</span>
         </NavLink>
 
         {/* Desktop pill nav */}
         <nav className="pill-nav" aria-label={t("nav.menu")}>
           <div className="pill-nav-primary">
-            {primaryItems.map((item) => (
+            {houseItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -244,46 +326,35 @@ export function AppLayout() {
             ))}
           </div>
 
-          {moreItems.length > 0 && (
-            <div className="nav-dropdown" ref={moreWrapRef}>
-              <button
-                type="button"
-                className={`nav-link nav-dropdown-trigger ${moreOpen || moreActive ? "is-active" : ""}`}
-                aria-expanded={moreOpen}
-                aria-controls={moreMenuId}
-                aria-haspopup="menu"
-                onClick={() => {
-                  setMoreOpen((v) => !v);
-                  setAccountOpen(false);
-                }}
-              >
-                <span className="nav-icon" aria-hidden="true">
-                  ▾
-                </span>
-                {t("nav.more")}
-              </button>
-              {moreOpen && (
-                <div
-                  id={moreMenuId}
-                  className="dropdown-panel"
-                  role="menu"
-                  aria-label={t("nav.more")}
-                >
-                  {moreItems.map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      role="menuitem"
-                      className="dropdown-item"
-                      onClick={() => setMoreOpen(false)}
-                    >
-                      <span className="nav-icon">{item.icon}</span>
-                      {t(item.labelKey)}
-                    </NavLink>
-                  ))}
-                </div>
-              )}
-            </div>
+          <NavMenu
+            label={t("nav.community")}
+            open={openMenu === "community"}
+            active={groupActive(communityItems)}
+            menuId={communityMenuId}
+            wrapRef={communityWrapRef}
+            items={communityItems}
+            onToggle={() => {
+              setOpenMenu((current) => (current === "community" ? null : "community"));
+              setAccountOpen(false);
+            }}
+            onNavigate={() => setOpenMenu(null)}
+            t={t}
+          />
+          {officeItems.length > 0 && (
+            <NavMenu
+              label={t("nav.office")}
+              open={openMenu === "office"}
+              active={groupActive(officeItems)}
+              menuId={officeMenuId}
+              wrapRef={officeWrapRef}
+              items={officeItems}
+              onToggle={() => {
+                setOpenMenu((current) => (current === "office" ? null : "office"));
+                setAccountOpen(false);
+              }}
+              onNavigate={() => setOpenMenu(null)}
+              t={t}
+            />
           )}
         </nav>
 
@@ -298,7 +369,7 @@ export function AppLayout() {
                 aria-haspopup="menu"
                 onClick={() => {
                   setAccountOpen((v) => !v);
-                  setMoreOpen(false);
+                  setOpenMenu(null);
                 }}
               >
                 <span className="user-avatar" aria-hidden="true">
@@ -364,18 +435,9 @@ export function AppLayout() {
         inert={!mobileOpen ? true : undefined}
       >
         <nav className="mobile-nav-list" aria-label={t("nav.menu")}>
-          {items.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === "/"}
-              className="nav-link mobile-nav-link"
-              onClick={closeMobile}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              {t(item.labelKey)}
-            </NavLink>
-          ))}
+          <MobileGroup label={t("nav.groupHouse")} items={houseItems} onNavigate={closeMobile} t={t} />
+          <MobileGroup label={t("nav.community")} items={communityItems} onNavigate={closeMobile} t={t} />
+          <MobileGroup label={t("nav.office")} items={officeItems} onNavigate={closeMobile} t={t} />
         </nav>
         <div className="mobile-account-block">
           <p className="dropdown-section-label">{t("nav.account")}</p>

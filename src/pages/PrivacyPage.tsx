@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { BrandMark } from "../components/BrandMark";
 
 export function PrivacyPage() {
   const { t } = useTranslation();
@@ -18,9 +19,7 @@ export function PrivacyPage() {
     <div className="login-page">
       <div className="login-top">
         <div className="brand-wordmark">
-          <span className="brand-blob" aria-hidden="true">
-            CP
-          </span>
+          <BrandMark />
           <span>{t("app.shortName")}</span>
         </div>
       </div>

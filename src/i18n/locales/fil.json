@@ -34,6 +34,9 @@
     "logout": "Mag-log out",
     "changePassword": "Palitan ang password",
     "more": "Higit pa",
+    "community": "Komunidad",
+    "office": "Opisina",
+    "groupHouse": "Bahay ninyo",
     "account": "Account",
     "announcements": "Mga anunsyo",
     "documents": "Mga dokumento",
@@ -124,6 +127,7 @@
   },
   "landing": {
     "kicker": "Celina Plains Phase 1",
+    "sealAlt": "Celina Plains Homeowners' Association, Imus. HLURB Reg. No. 14844",
     "title": "Mas tahimik na daan pauwi.",
     "lead": "Dues, bayad, abiso, at boto ng taon, nasa isang ledger ng residente.",
     "signIn": "Mag-sign in",

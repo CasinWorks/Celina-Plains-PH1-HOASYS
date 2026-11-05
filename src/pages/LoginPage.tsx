@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
+import { BrandMark } from "../components/BrandMark";
 import { LanguageSwitch } from "../components/LanguageSwitch";
 import { PoweredByCasinWorks } from "../components/PoweredByCasinWorks";
 import { TextSizeToggle } from "../components/TextSizeToggle";
@@ -70,9 +71,7 @@ export function LoginPage() {
 
       <div className="login-top">
         <Link to="/welcome" className="brand-wordmark">
-          <span className="brand-blob" aria-hidden="true">
-            CP
-          </span>
+          <BrandMark />
           <span>{t("app.name")}</span>
         </Link>
         <div className="header-actions">

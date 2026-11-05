@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
+import { BrandMark } from "../components/BrandMark";
 import { PoweredByCasinWorks } from "../components/PoweredByCasinWorks";
 import {
   BLOCK_LEADERS,
@@ -81,9 +82,7 @@ export function OfficersPage() {
     <div className="public-page">
       <header className="public-top">
         <Link to={session ? "/" : "/login"} className="brand-wordmark">
-          <span className="brand-blob" aria-hidden="true">
-            CP
-          </span>
+          <BrandMark />
           <span>{t("app.shortName")}</span>
         </Link>
         <Link className="btn btn-primary" to={session ? "/" : "/login"}>
