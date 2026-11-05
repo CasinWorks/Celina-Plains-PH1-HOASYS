@@ -69,12 +69,12 @@ export function LoginPage() {
       <PoweredByCasinWorks variant="float" />
 
       <div className="login-top">
-        <div className="brand-wordmark">
+        <Link to="/welcome" className="brand-wordmark">
           <span className="brand-blob" aria-hidden="true">
             CP
           </span>
           <span>{t("app.name")}</span>
-        </div>
+        </Link>
         <div className="header-actions">
           <LanguageSwitch />
           <TextSizeToggle />

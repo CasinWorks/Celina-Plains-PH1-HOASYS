@@ -8,6 +8,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { DuesPage } from "./pages/DuesPage";
 import { ExpensesPage } from "./pages/ExpensesPage";
 import { FeedbackPage } from "./pages/FeedbackPage";
+import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
 import { LotsPage } from "./pages/LotsPage";
 import { MyLotPage } from "./pages/MyLotPage";
@@ -25,6 +26,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/welcome" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/officers" element={<OfficersPage />} />
           <Route

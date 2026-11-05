@@ -46,27 +46,31 @@ const NAV: NavItem[] = [
     to: "/announcements",
     labelKey: "nav.announcements",
     icon: <IconReport />,
+    primary: true,
   },
   {
     to: "/officers",
     labelKey: "nav.officers",
     icon: <IconAudit />,
+    primary: true,
   },
   {
     to: "/vote",
     labelKey: "nav.voting",
     icon: <IconPay />,
-  },
-  {
-    to: "/feedback",
-    labelKey: "nav.feedback",
-    icon: <IconAudit />,
     primary: true,
   },
   {
     to: "/plans",
     labelKey: "nav.plans",
     icon: <IconHome />,
+    primary: true,
+  },
+  {
+    to: "/feedback",
+    labelKey: "nav.feedback",
+    icon: <IconAudit />,
+    primary: true,
   },
   {
     to: "/lots",

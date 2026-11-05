@@ -10,7 +10,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
 
   if (loading) return <p className="main-panel">{t("common.loading")}</p>;
   if (!session) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    return <Navigate to="/welcome" replace state={{ from: location }} />;
   }
   if (!session.consentPrivacyAt && location.pathname !== "/privacy") {
     return <Navigate to="/privacy" replace />;
