@@ -119,7 +119,7 @@ export function DashboardPage() {
             <Link to="/dues">{t("dashboard.viewDues")}</Link>
           </div>
           <div className="reminder-chips">
-            {upcoming.map((d, i) => {
+            {upcoming.map((d) => {
               const delta = daysUntil(d.dueDate);
               const overdue = delta < 0;
               const soon = delta >= 0 && delta <= 7;

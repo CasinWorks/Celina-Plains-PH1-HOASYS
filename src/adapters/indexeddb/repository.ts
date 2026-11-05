@@ -79,6 +79,46 @@ function refreshDuesStatus(charge: DuesCharge): DuesStatusComputed {
 
 type DuesStatusComputed = { status: DuesCharge["status"]; amountPaid: string };
 
+async function electionView(db: HoaDatabase, actor: Session): Promise<ElectionView> {
+  const election = await db.elections.get(ELECTION_ID);
+  if (!election) throw new Error("Election not found.");
+  const contests = (
+    await db.electionContests.where("electionId").equals(election.id).toArray()
+  ).sort((a, b) => a.sortOrder - b.sortOrder);
+  const assignments = await db.voterAssignments
+    .where("electionId")
+    .equals(election.id)
+    .toArray();
+  const ballots = await db.ballots.where("electionId").equals(election.id).toArray();
+  const votedLots = new Set(ballots.map((ballot) => ballot.lotId));
+  const tallies: ElectionTally[] = contests.map((contest) => {
+    let votesFor = 0;
+    let abstain = 0;
+    for (const ballot of ballots) {
+      const choice = ballot.choices.find((row) => row.contestId === contest.id);
+      if (!choice) continue;
+      if (choice.choice === "for") votesFor += 1;
+      else abstain += 1;
+    }
+    return { contestId: contest.id, votesFor, abstain };
+  });
+  const mine = new Set(actor.lotIds);
+  return {
+    election,
+    contests,
+    tallies,
+    eligibleCount: assignments.filter((row) => row.eligible).length,
+    votedCount: ballots.length,
+    myAssignments: assignments.filter((row) => mine.has(row.lotId)),
+    myBallots: ballots.filter((row) => mine.has(row.lotId)),
+    roll: canManageElection(actor)
+      ? assignments
+          .map((row) => ({ ...row, hasVoted: votedLots.has(row.lotId) }))
+          .sort((a, b) => a.lotCode.localeCompare(b.lotCode))
+      : null,
+  };
+}
+
 export function createIndexedDbRepository(
   db: HoaDatabase = getDb(),
   files: FileStorageService,
@@ -450,7 +490,8 @@ export function createIndexedDbRepository(
         }
       }
 
-      let remaining = money(payment.amount);
+      const claim = payment;
+      let remaining = money(claim.amount);
       const allocations: PaymentAllocation[] = [];
       const allocatedIds: string[] = [];
 
@@ -465,7 +506,7 @@ export function createIndexedDbRepository(
           const apply = cmpMoney(remaining, bal) <= 0 ? remaining : bal;
           const alloc: PaymentAllocation = {
             id: createId("alloc"),
-            paymentId: payment.id,
+            paymentId: claim.id,
             duesChargeId: charge.id,
             amount: apply,
             createdAt: nowIso(),
@@ -1158,7 +1199,7 @@ export function createIndexedDbRepository(
           updatedAt: nowIso(),
         }));
       if (missing.length) await db.voterAssignments.bulkAdd(missing);
-      return this.electionView(actor);
+      return electionView(db, actor);
     },
 
     async setElectionStatus(status, actor) {
@@ -1179,7 +1220,7 @@ export function createIndexedDbRepository(
         actorName: actor.fullName,
         note: `Voting ${status}`,
       });
-      return this.electionView(actor);
+      return electionView(db, actor);
     },
 
     async setVoterAssignment(input, actor) {
@@ -1215,7 +1256,7 @@ export function createIndexedDbRepository(
         updatedAt: nowIso(),
       };
       await db.voterAssignments.put(row);
-      return this.electionView(actor);
+      return electionView(db, actor);
     },
 
     async castBallot(input, actor) {
@@ -1284,50 +1325,7 @@ export function createIndexedDbRepository(
         actorName: actor.fullName,
         note: "Ballot submitted. Choices are not stored in the audit log.",
       });
-      return this.electionView(actor);
-    },
-
-    async electionView(actor): Promise<ElectionView> {
-      const election = await db.elections.get(ELECTION_ID);
-      if (!election) throw new Error("Election not found.");
-      const contests = (
-        await db.electionContests.where("electionId").equals(election.id).toArray()
-      ).sort((a, b) => a.sortOrder - b.sortOrder);
-      const assignments = await db.voterAssignments
-        .where("electionId")
-        .equals(election.id)
-        .toArray();
-      const ballots = await db.ballots
-        .where("electionId")
-        .equals(election.id)
-        .toArray();
-      const votedLots = new Set(ballots.map((ballot) => ballot.lotId));
-      const tallies: ElectionTally[] = contests.map((contest) => {
-        let votesFor = 0;
-        let abstain = 0;
-        for (const ballot of ballots) {
-          const choice = ballot.choices.find((row) => row.contestId === contest.id);
-          if (!choice) continue;
-          if (choice.choice === "for") votesFor += 1;
-          else abstain += 1;
-        }
-        return { contestId: contest.id, votesFor, abstain };
-      });
-      const mine = new Set(actor.lotIds);
-      return {
-        election,
-        contests,
-        tallies,
-        eligibleCount: assignments.filter((row) => row.eligible).length,
-        votedCount: ballots.length,
-        myAssignments: assignments.filter((row) => mine.has(row.lotId)),
-        myBallots: ballots.filter((row) => mine.has(row.lotId)),
-        roll: canManageElection(actor)
-          ? assignments
-              .map((row) => ({ ...row, hasVoted: votedLots.has(row.lotId) }))
-              .sort((a, b) => a.lotCode.localeCompare(b.lotCode))
-          : null,
-      };
+      return electionView(db, actor);
     },
 
     async seedDemoData(replace = true) {

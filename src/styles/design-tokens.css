@@ -1562,6 +1562,19 @@ svg {
   flex: 1;
 }
 
+.officers-page > .page-title {
+  color: var(--paper);
+}
+
+.officers-page > .page-lead,
+.officers-page > .hint {
+  color: rgba(247, 244, 238, 0.88);
+}
+
+.officers-page > .login-public-link a {
+  color: var(--paper);
+}
+
 .officer-list {
   list-style: none;
   margin: 0;
