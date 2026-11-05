@@ -1237,6 +1237,12 @@ svg {
   resize: vertical;
 }
 
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+  color: #a39e94;
+  opacity: 1;
+}
+
 .form-field input:focus,
 .form-field select:focus,
 .form-field textarea:focus {

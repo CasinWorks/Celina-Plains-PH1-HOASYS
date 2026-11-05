@@ -105,6 +105,7 @@ export function RegisterPage() {
               id="fullName"
               name="name"
               autoComplete="name"
+              placeholder={t("register.fullNamePh")}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
@@ -116,6 +117,7 @@ export function RegisterPage() {
               id="lotCode"
               name="lotCode"
               autoComplete="off"
+              placeholder={t("register.lotCodePh")}
               value={lotCode}
               onChange={(e) => setLotCode(e.target.value)}
               required
@@ -129,6 +131,7 @@ export function RegisterPage() {
               name="tel"
               type="tel"
               autoComplete="tel"
+              placeholder={t("register.mobilePh")}
               value={mobile}
               onChange={(e) => setMobile(e.target.value)}
             />
@@ -139,6 +142,7 @@ export function RegisterPage() {
               id="username"
               name="username"
               autoComplete="username"
+              placeholder={t("register.usernamePh")}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -151,6 +155,7 @@ export function RegisterPage() {
               name="password"
               type="password"
               autoComplete="new-password"
+              placeholder={t("register.passwordPh")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -163,6 +168,7 @@ export function RegisterPage() {
               name="confirm"
               type="password"
               autoComplete="new-password"
+              placeholder={t("register.confirmPh")}
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               required
