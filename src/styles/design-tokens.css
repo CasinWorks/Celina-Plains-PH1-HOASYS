@@ -2889,13 +2889,156 @@ svg {
   margin-top: 1.5rem;
 }
 
-@media (max-width: 720px) {
+.list-row-pair {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.month-strip,
+.chart-scroll,
+.table-wrap,
+.card,
+.bento-card,
+.bento-grid > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.month-strip {
+  overflow-x: auto;
+}
+
+.month-strip-row {
+  width: max-content;
+  min-width: 100%;
+}
+
+@media (max-width: 800px) {
+  .public-top,
+  .login-top {
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .landing-top-actions,
+  .login-top .header-actions {
+    flex-wrap: wrap;
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+
+  .brand-wordmark {
+    max-width: 100%;
+    min-width: 0;
+    flex-shrink: 1;
+    font-size: 1.05rem;
+  }
+
+  .brand-wordmark span {
+    min-width: 0;
+  }
+
+  .brand-seal {
+    width: 40px;
+    height: 40px;
+  }
+
+  .top-nav {
+    gap: 0.65rem;
+    padding: 0.65rem 0.85rem;
+  }
+
+  .demo-banner {
+    letter-spacing: 0.04em;
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  .main-panel {
+    width: calc(100% - 1rem);
+    margin-top: 0.5rem;
+    padding: 1.15rem 1rem 2.5rem;
+  }
+
+  .concierge {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .landing-hero-copy,
+  .landing-note,
+  .landing-gallery,
+  .landing-sheet-inner {
+    width: calc(100% - 2rem);
+  }
+
+  .landing-actions .btn {
+    flex: 1 1 12rem;
+  }
+
+  .login-card {
+    width: calc(100% - 1rem);
+    padding: 1.35rem 1rem 1.5rem;
+  }
+
   .use-strip ol,
   .pay-options-grid {
     grid-template-columns: 1fr;
   }
 
   .pay-card {
+    flex-direction: column;
     align-items: flex-start;
+    min-height: 0;
+  }
+
+  .pay-card p {
+    max-width: none;
+  }
+
+  .segmented {
+    flex-wrap: wrap;
+    max-width: 100%;
+    overflow: visible;
+  }
+
+  .list-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .list-row-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .list-row > .btn-row,
+  .list-row > .badge {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .announcement-head,
+  .reminder-strip-head,
+  .chart-card-head,
+  .report-charts-head {
+    align-items: flex-start;
+  }
+
+  .btn-row > .form-field {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .data-table.responsive td {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+
+  .app-footer {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: calc(var(--space-8) + 5rem);
   }
 }

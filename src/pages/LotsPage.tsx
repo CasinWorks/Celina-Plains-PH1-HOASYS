@@ -159,11 +159,7 @@ function LotsInner() {
         ) : (
           <div className="list-stack">
             {applications.map((person) => (
-              <div
-                className="list-row"
-                key={person.id}
-                style={{ gridTemplateColumns: "1fr auto" }}
-              >
+              <div className="list-row list-row-pair" key={person.id}>
                 <div style={{ textAlign: "left" }}>
                   <strong>
                     {person.fullName} — {person.requestedLotCode}

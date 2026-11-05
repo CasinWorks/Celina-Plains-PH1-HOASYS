@@ -39,7 +39,7 @@ function OfficersList() {
           {t("officers.blockLead")}
         </p>
         <div className="table-wrap">
-          <table className="data-table officers-table">
+          <table className="data-table responsive officers-table">
             <thead>
               <tr>
                 <th scope="col">{t("officers.block")}</th>
