@@ -39,6 +39,8 @@ export function LotDetailDrawer({ lot, onClose }: Props) {
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  if (!open) return null;
+
   return (
     <>
       <div
