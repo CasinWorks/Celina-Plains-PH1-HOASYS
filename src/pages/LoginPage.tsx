@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
 import { LanguageSwitch } from "../components/LanguageSwitch";
+import { PoweredByCasinWorks } from "../components/PoweredByCasinWorks";
 import { TextSizeToggle } from "../components/TextSizeToggle";
 import { DEMO_PASSWORD, DEMO_USERS } from "../lib/config";
-import { getServices } from "../services/createServices";
+import { getServices, isFirebaseEnabled } from "../services/createServices";
 import { applyTextSize, getStoredTextSize } from "../lib/textSize";
 
 export function LoginPage() {
@@ -63,26 +64,25 @@ export function LoginPage() {
   return (
     <div className="login-page">
       <div className="demo-banner" role="status">
-        {t("app.demoBanner")}
+        {t(isFirebaseEnabled() ? "app.cloudBanner" : "app.demoBanner")}
       </div>
-      <div className="gold-rule" aria-hidden="true" />
-      <header className="official-header">
-        <div className="brand-block">
-          <div className="brand-monogram" aria-hidden="true">
+      <PoweredByCasinWorks variant="float" />
+
+      <div className="login-top">
+        <div className="brand-wordmark">
+          <span className="brand-blob" aria-hidden="true">
             CP
-          </div>
-          <div className="brand-text">
-            <strong>{t("app.name")}</strong>
-            <span>{t("app.tagline")}</span>
-          </div>
+          </span>
+          <span>{t("app.name")}</span>
         </div>
         <div className="header-actions">
           <LanguageSwitch />
           <TextSizeToggle />
         </div>
-      </header>
+      </div>
 
       <div className="card login-card">
+        <p className="login-eyebrow">{t("app.shortName")}</p>
         <h1 className="page-title">{t("login.title")}</h1>
         <p className="page-lead">{t("login.lead")}</p>
 
@@ -125,50 +125,50 @@ export function LoginPage() {
             <button className="btn btn-primary" type="submit" disabled={busy}>
               {t("login.submit")}
             </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => void loadDemo()}
+              disabled={busy}
+            >
+              {t("settings.seedDemo")}
+            </button>
           </div>
         </form>
 
-        <hr style={{ margin: "1.5rem 0", borderColor: "var(--border)" }} />
-
-        <p style={{ fontWeight: 700 }}>
-          {t("login.demoHint", { password: DEMO_PASSWORD })}
-        </p>
-        <div className="btn-row" style={{ marginTop: "0.75rem" }}>
+        <p className="login-demo-label">{t("login.demoHint", { password: DEMO_PASSWORD })}</p>
+        <div className="demo-chip-row">
           <button
             type="button"
-            className="btn btn-secondary"
+            className="demo-chip"
             onClick={() => fill("homeowner")}
           >
             {t("login.homeownerDemo")}
           </button>
           <button
             type="button"
-            className="btn btn-secondary"
+            className="demo-chip"
             onClick={() => fill("officer")}
           >
             {t("login.officerDemo")}
           </button>
           <button
             type="button"
-            className="btn btn-secondary"
+            className="demo-chip"
             onClick={() => fill("treasurer")}
           >
             {t("login.treasurerDemo")}
           </button>
         </div>
-        <div className="btn-row" style={{ marginTop: "1rem" }}>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => void loadDemo()}
-            disabled={busy}
-          >
-            {t("settings.seedDemo")}
-          </button>
-        </div>
         <p className="hint" style={{ marginTop: "0.75rem" }}>
           {t("settings.seedDemoHint")}
         </p>
+        <p className="login-public-link">
+          <Link to="/officers">{t("officers.publicLink")}</Link>
+        </p>
+        <div className="footer-powered" style={{ marginTop: "1.5rem" }}>
+          <PoweredByCasinWorks variant="banner" />
+        </div>
       </div>
     </div>
   );

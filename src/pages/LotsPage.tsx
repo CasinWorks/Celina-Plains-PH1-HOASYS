@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
 import { RequireRole } from "../auth/RequireAuth";
+import { LotDetailDrawer } from "../components/LotDetailDrawer";
 import type { Lot } from "../domain/types";
 import { getServices } from "../services/createServices";
 
@@ -9,6 +10,7 @@ function LotsInner() {
   const { t } = useTranslation();
   const { session, hasRole } = useAuth();
   const [lots, setLots] = useState<Lot[]>([]);
+  const [selected, setSelected] = useState<Lot | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const canManage = hasRole("treasurer");
@@ -57,7 +59,7 @@ function LotsInner() {
   }
 
   return (
-    <div>
+    <div className="page-animate">
       <h1 className="page-title">{t("lots.title")}</h1>
       <p className="page-lead">{t("lots.lead")}</p>
       {message && (
@@ -72,7 +74,7 @@ function LotsInner() {
       )}
 
       {canManage && (
-        <div className="card">
+        <div className="card pop-in">
           <h2 className="card-title">{t("lots.create")}</h2>
           <form onSubmit={createLot}>
             <div className="form-field">
@@ -124,38 +126,47 @@ function LotsInner() {
         </div>
       )}
 
-      <div className="card">
+      <div className="card pop-in">
+        <h2 className="card-title">{t("lots.title")}</h2>
+        <p className="meta-line">{t("lots.drawerHint")}</p>
         {lots.length === 0 ? (
           <p>{t("lots.empty")}</p>
         ) : (
-          <div className="table-wrap">
-            <table className="data-table responsive">
-              <thead>
-                <tr>
-                  <th>{t("lots.lotCode")}</th>
-                  <th>{t("lots.household")}</th>
-                  <th>{t("lots.block")}</th>
-                  <th>{t("lots.street")}</th>
-                  <th>{t("common.status")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lots.map((l) => (
-                  <tr key={l.id}>
-                    <td data-label={t("lots.lotCode")}>{l.lotCode}</td>
-                    <td data-label={t("lots.household")}>{l.householdName}</td>
-                    <td data-label={t("lots.block")}>{l.block || "—"}</td>
-                    <td data-label={t("lots.street")}>{l.street || "—"}</td>
-                    <td data-label={t("common.status")}>
-                      {l.isActive ? t("lots.active") : t("lots.inactive")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="list-stack">
+            {lots.map((l, i) => (
+              <button
+                type="button"
+                className="list-row list-row-button"
+                key={l.id}
+                onClick={() => setSelected(l)}
+              >
+                <span
+                  className={`avatar-tile tone-${i % 6} bob`}
+                  aria-hidden="true"
+                >
+                  {(l.street || l.lotCode).slice(0, 1).toUpperCase()}
+                </span>
+                <div style={{ textAlign: "left" }}>
+                  <strong>
+                    {l.lotCode} — {l.householdName}
+                  </strong>
+                  <div className="meta-line">
+                    {t("lots.block")}: {l.block || "—"} · {t("lots.street")}:{" "}
+                    {l.street || "—"}
+                  </div>
+                </div>
+                <span
+                  className={`badge ${l.isActive ? "badge-success" : "badge-muted"}`}
+                >
+                  {l.isActive ? t("lots.active") : t("lots.inactive")}
+                </span>
+              </button>
+            ))}
           </div>
         )}
       </div>
+
+      <LotDetailDrawer lot={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }

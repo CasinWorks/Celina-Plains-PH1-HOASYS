@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
 import { StatusBadge } from "../components/StatusBadge";
@@ -9,6 +10,7 @@ import { getServices } from "../services/createServices";
 export function PaymentsPage() {
   const { t } = useTranslation();
   const { session, hasRole } = useAuth();
+  const [searchParams] = useSearchParams();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [lots, setLots] = useState<Lot[]>([]);
   const [cfg, setCfg] = useState<SiteConfig | null>(null);
@@ -21,11 +23,15 @@ export function PaymentsPage() {
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [duesId, setDuesId] = useState<string | null>(null);
+  const [duesPeriod, setDuesPeriod] = useState<string | null>(null);
 
   const [verifyId, setVerifyId] = useState<string | null>(null);
   const [orNumber, setOrNumber] = useState("");
+  const [verifyError, setVerifyError] = useState("");
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [busyVerify, setBusyVerify] = useState(false);
 
   const isTreasurer = hasRole("treasurer");
 
@@ -56,6 +62,24 @@ export function PaymentsPage() {
     void load();
   }, [session]);
 
+  useEffect(() => {
+    const qLot = searchParams.get("lotId");
+    const qAmount = searchParams.get("amount");
+    const qDues = searchParams.get("duesId");
+    const qPeriod = searchParams.get("period");
+    if (qLot) setLotId(qLot);
+    if (qAmount) setAmount(qAmount);
+    if (qDues) setDuesId(qDues);
+    if (qPeriod) {
+      setDuesPeriod(qPeriod);
+      setNotes((prev) =>
+        prev.trim()
+          ? prev
+          : t("payments.duesPrefillNote", { period: qPeriod }),
+      );
+    }
+  }, [searchParams, t]);
+
   async function submitPayment(e: FormEvent) {
     e.preventDefault();
     if (!session) return;
@@ -76,6 +100,7 @@ export function PaymentsPage() {
           proofBlob: file,
           proofFileName: file.name,
           proofMimeType: file.type,
+          intendedDuesIds: duesId ? [duesId] : undefined,
         },
         session,
       );
@@ -84,6 +109,8 @@ export function PaymentsPage() {
       setReference("");
       setNotes("");
       setFile(null);
+      setDuesId(null);
+      setDuesPeriod(null);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.error"));
@@ -92,15 +119,27 @@ export function PaymentsPage() {
 
   async function doVerify(e: FormEvent) {
     e.preventDefault();
-    if (!session || !verifyId) return;
+    e.stopPropagation();
+    if (!session || !verifyId || busyVerify) return;
+    setVerifyError("");
+    setError("");
+    setBusyVerify(true);
     try {
-      await getServices().repo.verifyPayment(verifyId, orNumber, session);
+      await getServices().repo.verifyPayment(
+        verifyId,
+        orNumber.trim(),
+        session,
+      );
       setMessage(t("payments.verified"));
       setVerifyId(null);
       setOrNumber("");
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("common.error"));
+      const msg = err instanceof Error ? err.message : t("common.error");
+      setVerifyError(msg);
+      setError(msg);
+    } finally {
+      setBusyVerify(false);
     }
   }
 
@@ -142,8 +181,13 @@ export function PaymentsPage() {
         </div>
       )}
 
-      <div className="card">
+      <div className="card" id="payment-form">
         <h2 className="card-title">{t("payments.submit")}</h2>
+        {duesPeriod && (
+          <div className="alert alert-info" role="status">
+            {t("payments.payingForPeriod", { period: duesPeriod })}
+          </div>
+        )}
         <form onSubmit={submitPayment}>
           <div className="form-field">
             <label htmlFor="lot">{t("common.lot")}</label>
@@ -215,7 +259,7 @@ export function PaymentsPage() {
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
-          <button className="btn btn-primary" type="submit">
+          <button className="btn btn-cta" type="submit">
             {t("payments.submit")}
           </button>
         </form>
@@ -254,6 +298,16 @@ export function PaymentsPage() {
                           onClick={() => {
                             setVerifyId(p.id);
                             setOrNumber("");
+                            setVerifyError("");
+                            setRejectId(null);
+                            requestAnimationFrame(() => {
+                              document
+                                .getElementById("verify-payment-card")
+                                ?.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "nearest",
+                                });
+                            });
                           }}
                         >
                           {t("common.verify")}
@@ -279,9 +333,14 @@ export function PaymentsPage() {
       )}
 
       {verifyId && (
-        <div className="card">
+        <div className="card" id="verify-payment-card">
           <h2 className="card-title">{t("payments.verifyTitle")}</h2>
-          <form onSubmit={doVerify}>
+          {verifyError && (
+            <div className="alert alert-danger" role="alert">
+              {verifyError}
+            </div>
+          )}
+          <form onSubmit={doVerify} noValidate={false}>
             <div className="form-field">
               <label htmlFor="or">{t("common.orNumber")}</label>
               <input
@@ -289,16 +348,25 @@ export function PaymentsPage() {
                 value={orNumber}
                 onChange={(e) => setOrNumber(e.target.value)}
                 required
+                autoFocus
               />
             </div>
             <div className="btn-row">
-              <button className="btn btn-primary" type="submit">
-                {t("common.verify")}
+              <button
+                className="btn btn-primary"
+                type="submit"
+                disabled={busyVerify || !orNumber.trim()}
+              >
+                {busyVerify ? t("common.loading") : t("common.verify")}
               </button>
               <button
                 className="btn btn-secondary"
                 type="button"
-                onClick={() => setVerifyId(null)}
+                disabled={busyVerify}
+                onClick={() => {
+                  setVerifyId(null);
+                  setVerifyError("");
+                }}
               >
                 {t("common.cancel")}
               </button>

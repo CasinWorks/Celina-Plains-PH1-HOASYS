@@ -199,7 +199,7 @@ function SettingsInner() {
       <div className="card">
         <h2 className="card-title">{t("settings.demoData")}</h2>
         <p>{t("settings.seedDemoHint")}</p>
-        <button type="button" className="btn btn-primary" onClick={() => void seed()}>
+        <button type="button" className="btn btn-cta" onClick={() => void seed()}>
           {t("settings.seedDemo")}
         </button>
       </div>

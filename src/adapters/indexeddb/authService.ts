@@ -3,7 +3,7 @@ import { nowIso } from "../../lib/ids";
 import type { AuthService } from "../../services/interfaces";
 import { getDb, type HoaDatabase } from "./db";
 
-const SESSION_KEY = "celina_hoa_session";
+export const SESSION_KEY = "celina_hoa_session";
 
 function toSession(user: UserAccount): Session {
   return {

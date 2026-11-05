@@ -1,13 +1,20 @@
 import Dexie, { type EntityTable } from "dexie";
 import type {
+  Announcement,
+  Ballot,
   DuesCharge,
+  Election,
+  ElectionContest,
   Expense,
+  FeedbackItem,
   FinanceAuditLog,
+  HoaPlan,
   Lot,
   Payment,
   PaymentAllocation,
   SiteConfig,
   UserAccount,
+  VoterAssignment,
 } from "../../domain/types";
 
 export type FileRecord = {
@@ -28,6 +35,13 @@ export class HoaDatabase extends Dexie {
   auditLogs!: EntityTable<FinanceAuditLog, "id">;
   siteConfig!: EntityTable<SiteConfig, "id">;
   files!: EntityTable<FileRecord, "key">;
+  announcements!: EntityTable<Announcement, "id">;
+  feedbackItems!: EntityTable<FeedbackItem, "id">;
+  hoaPlans!: EntityTable<HoaPlan, "id">;
+  elections!: EntityTable<Election, "id">;
+  electionContests!: EntityTable<ElectionContest, "id">;
+  voterAssignments!: EntityTable<VoterAssignment, "id">;
+  ballots!: EntityTable<Ballot, "id">;
 
   constructor(name = "celina_plains_p1_hoa") {
     super(name);
@@ -41,6 +55,26 @@ export class HoaDatabase extends Dexie {
       auditLogs: "id, timestamp, entity, entityId",
       siteConfig: "id",
       files: "key",
+    });
+    this.version(2).stores({
+      users: "id, username",
+      lots: "id, lotCode, isActive",
+      dues: "id, lotId, periodYear, periodMonth, status, [lotId+periodYear+periodMonth]",
+      payments: "id, lotId, status, paymentNo, createdAt",
+      allocations: "id, paymentId, duesChargeId",
+      expenses: "id, expenseDate, status, category",
+      auditLogs: "id, timestamp, entity, entityId",
+      siteConfig: "id",
+      files: "key",
+      announcements: "id, publishedAt, pinned",
+      feedbackItems: "id, type, status, authorUserId, createdAt",
+      hoaPlans: "id, status, updatedAt",
+    });
+    this.version(3).stores({
+      elections: "id, year, status",
+      electionContests: "id, electionId, sortOrder",
+      voterAssignments: "id, electionId, lotId, [electionId+lotId]",
+      ballots: "id, electionId, lotId, [electionId+lotId]",
     });
   }
 }

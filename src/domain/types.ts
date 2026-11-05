@@ -21,11 +21,76 @@ export type ExpenseCategory =
   | "other";
 export type ExpenseStatus = "posted" | "void";
 
+export type FeedbackType = "complaint" | "suggestion";
+export type FeedbackStatus = "open" | "in_progress" | "resolved" | "closed";
+export type HoaPlanStatus = "planned" | "in_progress" | "done";
+
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  pinned: boolean;
+  authorUserId: string;
+  authorName: string;
+  publishedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FeedbackReply {
+  id: string;
+  authorUserId: string;
+  authorName: string;
+  body: string;
+  createdAt: string;
+}
+
+export interface FeedbackItem {
+  id: string;
+  type: FeedbackType;
+  subject: string;
+  body: string;
+  status: FeedbackStatus;
+  lotId: string | null;
+  lotCode: string | null;
+  authorUserId: string;
+  authorName: string;
+  replies: FeedbackReply[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HoaPlanUpdate {
+  id: string;
+  body: string;
+  authorUserId: string;
+  authorName: string;
+  createdAt: string;
+}
+
+export interface HoaPlan {
+  id: string;
+  title: string;
+  description: string;
+  status: HoaPlanStatus;
+  progressPct: number;
+  updates: HoaPlanUpdate[];
+  authorUserId: string;
+  authorName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface UserAccount {
   id: string;
   username: string;
-  /** Demo-only plaintext password. Replace with Firebase Auth / hashed auth later. */
+  /**
+   * Local demo password. Firebase mode never writes this field to the cloud.
+   * Empty when the account is loaded from Firestore.
+   */
   password: string;
+  /** Firebase Auth uid, present after a cloud sign-in is linked. */
+  firebaseUid?: string;
   fullName: string;
   mobile: string;
   roles: Role[];
@@ -175,6 +240,100 @@ export interface HomeownerFinanceSummary {
   asOf: string;
 }
 
+/** Per-month collections progress for officer/treasurer charts. */
+export interface MonthlyPaymentProgress {
+  year: number;
+  month: number;
+  /** Verified (non-void) payments received in this calendar month. */
+  received: string;
+  /** Expected dues for the month (active lots × monthly dues). */
+  expected: string;
+  /** Sum of dues billed for this period (amountDue + penalty). */
+  billed: string;
+  /** Count of verified payments in the month. */
+  paymentCount: number;
+  /**
+   * Collection progress vs expected target, 0–100+.
+   * Null when expected is zero.
+   */
+  progressPct: number | null;
+}
+
+export type ElectionStatus = "setup" | "open" | "closed";
+export type ContestScope = "association" | "block";
+export type VoteChoice = "for" | "abstain";
+
+export interface Election {
+  id: string;
+  year: number;
+  title: string;
+  status: ElectionStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ElectionContest {
+  id: string;
+  electionId: string;
+  scope: ContestScope;
+  /** president, vicePresident, treasurer, auditor, or blockLeader */
+  roleKey: string;
+  /** Lot blocks that vote in this contest. Empty means every eligible lot. */
+  blocks: string[];
+  candidateName: string;
+  sortOrder: number;
+}
+
+/** Which lot may vote, and which block their block-leader vote belongs to. */
+export interface VoterAssignment {
+  id: string;
+  electionId: string;
+  lotId: string;
+  lotCode: string;
+  householdName: string;
+  block: string;
+  eligible: boolean;
+  assignedByUserId: string;
+  updatedAt: string;
+}
+
+export interface BallotChoice {
+  contestId: string;
+  choice: VoteChoice;
+}
+
+export interface Ballot {
+  id: string;
+  electionId: string;
+  lotId: string;
+  voterUserId: string;
+  voterName: string;
+  choices: BallotChoice[];
+  submittedAt: string;
+}
+
+export interface ElectionTally {
+  contestId: string;
+  votesFor: number;
+  abstain: number;
+}
+
+export interface VoterRollRow extends VoterAssignment {
+  hasVoted: boolean;
+}
+
+export interface ElectionView {
+  election: Election;
+  contests: ElectionContest[];
+  tallies: ElectionTally[];
+  eligibleCount: number;
+  votedCount: number;
+  myAssignments: VoterAssignment[];
+  myBallots: Ballot[];
+  /** Present for officers and the treasurer. Choices stay off the roll. */
+  roll: VoterRollRow[] | null;
+}
+
 export interface ExportBundle {
   version: 1;
   exportedAt: string;
@@ -187,6 +346,13 @@ export interface ExportBundle {
   allocations: PaymentAllocation[];
   expenses: Expense[];
   auditLogs: FinanceAuditLog[];
+  announcements?: Announcement[];
+  feedbackItems?: FeedbackItem[];
+  hoaPlans?: HoaPlan[];
+  elections?: Election[];
+  electionContests?: ElectionContest[];
+  voterAssignments?: VoterAssignment[];
+  ballots?: Ballot[];
   /** Base64 proof/receipt blobs keyed by storage key — optional for lighter backups. */
   files?: Record<string, { mimeType: string; fileName: string; base64: string }>;
 }

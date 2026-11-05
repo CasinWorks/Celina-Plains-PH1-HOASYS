@@ -9,6 +9,7 @@ import {
   assertPaymentNotHardDeleted,
   createIndexedDbRepository,
 } from "../adapters/indexeddb/repository";
+import { contestsForBlock } from "../content/election2026";
 import { formatPeso } from "../domain/money";
 import type { Session } from "../domain/types";
 import type { AuthService, HoaRepository } from "../services/interfaces";
@@ -138,6 +139,50 @@ describe("IndexedDB repository (Phase 1 money flows)", () => {
     ).rejects.toThrow(/exceeds/i);
   });
 
+  it("verifies seeded demo pending payment with an OR number", async () => {
+    const pending = (await repo.listPayments({ status: "pending" }))[0];
+    expect(pending).toBeTruthy();
+    const verified = await repo.verifyPayment(pending!.id, "21", treasurer);
+    expect(verified.status).toBe("verified");
+    expect(verified.orNumber).toBe("21");
+  });
+
+  it("falls back to other open dues when intended dues are already paid", async () => {
+    const lotId = homeowner.lotIds[0]!;
+    const open = (await repo.listDues({ lotId })).filter(
+      (d) => d.status === "unpaid" || d.status === "partial",
+    );
+    expect(open.length).toBeGreaterThanOrEqual(1);
+    const intended = open[0]!;
+    // Mark intended as paid so soft verify must fall back (or credit).
+    await db.dues.put({
+      ...intended,
+      amountPaid: intended.amountDue,
+      status: "paid",
+      updatedAt: new Date().toISOString(),
+    });
+
+    const blob = new Blob(["proof"], { type: "image/png" });
+    const payment = await repo.submitPayment(
+      {
+        lotId,
+        amount: "100.00",
+        method: "gcash",
+        payerReference: "SOFT",
+        notes: "",
+        proofBlob: blob,
+        proofFileName: "p.png",
+        proofMimeType: "image/png",
+        intendedDuesIds: [intended.id],
+      },
+      homeowner,
+    );
+
+    const verified = await repo.verifyPayment(payment.id, "OR-SOFT", treasurer);
+    expect(verified.status).toBe("verified");
+    expect(verified.orNumber).toBe("OR-SOFT");
+  });
+
   it("blocks homeowner submitting payment for another lot", async () => {
     const allLots = await repo.listLots();
     const other = allLots.find((l) => !homeowner.lotIds.includes(l.id))!;
@@ -245,5 +290,96 @@ describe("IndexedDB repository (Phase 1 money flows)", () => {
     expect(summary).toHaveProperty("communityArrears");
     expect(summary).not.toHaveProperty("payments");
     expect(summary).not.toHaveProperty("residents");
+  });
+
+  it("assigns voters and accepts one secret ballot per lot", async () => {
+    const opened = await repo.ensureElection(treasurer);
+    expect(opened.election.status).toBe("open");
+    expect(opened.roll?.length).toBeGreaterThan(0);
+
+    const lotId = homeowner.lotIds[0]!;
+    await repo.setVoterAssignment(
+      { lotId, eligible: false, block: "9" },
+      treasurer,
+    );
+    const denied = await repo.ensureElection(homeowner);
+    const contests = contestsForBlock(
+      denied.contests,
+      denied.myAssignments[0]!.block,
+    );
+    await expect(
+      repo.castBallot(
+        {
+          lotId,
+          choices: contests.map((contest) => ({
+            contestId: contest.id,
+            choice: "for" as const,
+          })),
+        },
+        homeowner,
+      ),
+    ).rejects.toThrow(/not assigned/i);
+
+    await repo.setVoterAssignment(
+      { lotId, eligible: true, block: "1" },
+      treasurer,
+    );
+    const ready = await repo.ensureElection(homeowner);
+    const ballotContests = contestsForBlock(
+      ready.contests,
+      ready.myAssignments[0]!.block,
+    );
+    const voted = await repo.castBallot(
+      {
+        lotId,
+        choices: ballotContests.map((contest) => ({
+          contestId: contest.id,
+          choice: "for" as const,
+        })),
+      },
+      homeowner,
+    );
+    expect(voted.myBallots).toHaveLength(1);
+    expect(voted.roll).toBeNull();
+    const tally = voted.tallies.find(
+      (row) => row.contestId === ballotContests[0]!.id,
+    );
+    expect(tally?.votesFor).toBe(1);
+
+    await expect(
+      repo.castBallot(
+        {
+          lotId,
+          choices: ballotContests.map((contest) => ({
+            contestId: contest.id,
+            choice: "abstain" as const,
+          })),
+        },
+        homeowner,
+      ),
+    ).rejects.toThrow(/already/i);
+
+    await expect(
+      repo.setVoterAssignment(
+        { lotId, eligible: false, block: "1" },
+        treasurer,
+      ),
+    ).rejects.toThrow(/locked/i);
+
+    await expect(
+      repo.setVoterAssignment({ lotId, eligible: true, block: "1" }, homeowner),
+    ).rejects.toThrow(/officers or the treasurer/i);
+  });
+
+  it("builds monthly payment progress series for officer charts", async () => {
+    const series = await repo.monthlyPaymentProgress(2026);
+    expect(series).toHaveLength(12);
+    const september = series.find((r) => r.month === 9)!;
+    expect(Number(september.received)).toBeGreaterThan(0);
+    expect(september.paymentCount).toBeGreaterThan(0);
+    expect(september.progressPct).not.toBeNull();
+    const empty = series.find((r) => r.month === 1)!;
+    expect(empty.received).toBe("0.00");
+    expect(empty.paymentCount).toBe(0);
   });
 });

@@ -5,13 +5,22 @@
  */
 
 import type {
+  Announcement,
   DuesCharge,
+  ElectionStatus,
+  ElectionView,
   Expense,
   ExpenseCategory,
   ExportBundle,
+  FeedbackItem,
+  FeedbackStatus,
+  FeedbackType,
   FinanceAuditLog,
+  HoaPlan,
+  HoaPlanStatus,
   HomeownerFinanceSummary,
   Lot,
+  MonthlyPaymentProgress,
   MonthStatement,
   Payment,
   PaymentMethod,
@@ -19,6 +28,7 @@ import type {
   Session,
   SiteConfig,
   UserAccount,
+  VoteChoice,
 } from "../domain/types";
 
 export interface AuthService {
@@ -154,7 +164,82 @@ export interface HoaRepository {
   // Reports
   monthStatement(year: number, month: number): Promise<MonthStatement>;
   homeownerFinanceSummary(): Promise<HomeownerFinanceSummary>;
+  monthlyPaymentProgress(year: number): Promise<MonthlyPaymentProgress[]>;
   listAuditLogs(limit?: number): Promise<FinanceAuditLog[]>;
+
+  // Community — announcements
+  listAnnouncements(): Promise<Announcement[]>;
+  createAnnouncement(
+    input: { title: string; body: string; pinned?: boolean },
+    actor: Session,
+  ): Promise<Announcement>;
+  updateAnnouncement(
+    id: string,
+    patch: Partial<Pick<Announcement, "title" | "body" | "pinned">>,
+    actor: Session,
+  ): Promise<Announcement>;
+  deleteAnnouncement(id: string, actor: Session): Promise<void>;
+
+  // Community — complaints & suggestions
+  listFeedback(filter?: {
+    type?: FeedbackType;
+    status?: FeedbackStatus;
+  }): Promise<FeedbackItem[]>;
+  createFeedback(
+    input: {
+      type: FeedbackType;
+      subject: string;
+      body: string;
+      lotId?: string | null;
+    },
+    actor: Session,
+  ): Promise<FeedbackItem>;
+  updateFeedbackStatus(
+    id: string,
+    status: FeedbackStatus,
+    actor: Session,
+  ): Promise<FeedbackItem>;
+  replyToFeedback(
+    id: string,
+    body: string,
+    actor: Session,
+  ): Promise<FeedbackItem>;
+
+  // Community — HOA plans / progress
+  listHoaPlans(): Promise<HoaPlan[]>;
+  createHoaPlan(
+    input: {
+      title: string;
+      description: string;
+      status?: HoaPlanStatus;
+      progressPct?: number;
+    },
+    actor: Session,
+  ): Promise<HoaPlan>;
+  updateHoaPlan(
+    id: string,
+    patch: Partial<
+      Pick<HoaPlan, "title" | "description" | "status" | "progressPct">
+    >,
+    actor: Session,
+  ): Promise<HoaPlan>;
+  addHoaPlanUpdate(
+    id: string,
+    body: string,
+    actor: Session,
+  ): Promise<HoaPlan>;
+
+  // Election voting
+  ensureElection(actor: Session): Promise<ElectionView>;
+  setElectionStatus(status: ElectionStatus, actor: Session): Promise<ElectionView>;
+  setVoterAssignment(
+    input: { lotId: string; eligible: boolean; block: string },
+    actor: Session,
+  ): Promise<ElectionView>;
+  castBallot(
+    input: { lotId: string; choices: { contestId: string; choice: VoteChoice }[] },
+    actor: Session,
+  ): Promise<ElectionView>;
 
   // Demo / backup
   seedDemoData(replace?: boolean): Promise<void>;

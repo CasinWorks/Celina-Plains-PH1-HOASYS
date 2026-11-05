@@ -2,7 +2,7 @@
 
 Local-first resident portal for **Celina Plains Phase 1 HOA** (Philippines). Phase 1 covers login with roles, lots, dues, payments (proof upload + treasurer verification), expenses, and finance reports.
 
-This is a **React (Vite) browser app**. Data lives in **IndexedDB** (Dexie) behind a repository interface so a future Firebase or Supabase backend can replace it without rewriting screens. See [docs/BACKEND_SWAP.md](docs/BACKEND_SWAP.md).
+This is a **React (Vite) browser app**. Screens talk to a repository interface. With Firebase web keys in `.env`, sign-in, the ledger, and proof files use **Firebase Auth, Firestore, and Storage**. Without those keys, the same screens keep using **IndexedDB** on this browser. See [docs/BACKEND_SWAP.md](docs/BACKEND_SWAP.md).
 
 **No SMS. No government seals or GOV.PH logos.** Branding is Celina Plains Phase 1 HOA only.
 
@@ -48,7 +48,7 @@ Demo lots, dues, and payments are labeled **DEMO**. They are not live HOA record
 - Mock login with roles: `homeowner`, `officer`, `treasurer` (role-gated routes)
 - Lots / households (treasurer manage; officers can list)
 - Dues periods, arrears, configurable penalties
-- Payments with proof-of-payment image/PDF stored in IndexedDB; treasurer verify/reject + OR number
+- Payments with proof-of-payment image/PDF (IndexedDB, or Firebase Storage when cloud keys are set); treasurer verify/reject + OR number
 - Expenses (post / void with audit)
 - Finance reports (homeowner aggregate summary; treasurer monthly statement)
 - Privacy consent timestamp
@@ -74,6 +74,7 @@ Configurable placeholders (lot count, dues amount, penalties, payment instructio
 ```
 src/
   adapters/indexeddb/   # Dexie implementation of services
+  adapters/firebase/    # Auth, Firestore sync, and Storage when .env is set
   auth/                 # Session context + role guards
   components/           # Layout, language & text-size toggles
   domain/               # Types + money helpers (string IDs, ISO dates)
@@ -81,11 +82,12 @@ src/
   pages/                # Phase 1 screens
   services/             # Backend-agnostic interfaces + factory
   seed/                 # Demo bundle
-docs/BACKEND_SWAP.md    # How to swap in Firebase or Supabase later
+docs/BACKEND_SWAP.md    # Firebase setup and the IndexedDB fallback
 ```
 
 ## Notes
 
-- All data stays in this browser profile. Clearing site data wipes the local HOA database.
+- Without Firebase keys, all data stays in this browser profile. Clearing site data wipes that local database.
+- With Firebase keys, **Load DEMO data** once creates the shared demo sign-ins. Other devices then see the same ledger. Publish `firestore.rules` and `storage.rules` before the first cloud sign-in.
 - Use **Export JSON backup** in Settings before clearing storage.
-- Do not commit secrets; there is no server `.env` for Phase 1.
+- Do not commit `.env`. Copy `.env.example` and fill in the Firebase web app config.

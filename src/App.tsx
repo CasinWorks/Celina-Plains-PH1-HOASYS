@@ -2,18 +2,23 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthContext";
 import { RequireAuth } from "./auth/RequireAuth";
 import { AppLayout } from "./components/AppLayout";
+import { AnnouncementsPage } from "./pages/AnnouncementsPage";
 import { AuditPage } from "./pages/AuditPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { DuesPage } from "./pages/DuesPage";
 import { ExpensesPage } from "./pages/ExpensesPage";
+import { FeedbackPage } from "./pages/FeedbackPage";
 import { LoginPage } from "./pages/LoginPage";
 import { LotsPage } from "./pages/LotsPage";
 import { MyLotPage } from "./pages/MyLotPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { OfficersPage } from "./pages/OfficersPage";
 import { PaymentsPage } from "./pages/PaymentsPage";
+import { PlansPage } from "./pages/PlansPage";
 import { PrivacyPage } from "./pages/PrivacyPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { VotingPage } from "./pages/VotingPage";
 
 export default function App() {
   return (
@@ -21,6 +26,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/officers" element={<OfficersPage />} />
           <Route
             path="/privacy"
             element={
@@ -43,6 +49,10 @@ export default function App() {
             <Route path="lots" element={<LotsPage />} />
             <Route path="expenses" element={<ExpensesPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="announcements" element={<AnnouncementsPage />} />
+            <Route path="feedback" element={<FeedbackPage />} />
+            <Route path="plans" element={<PlansPage />} />
+            <Route path="vote" element={<VotingPage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="audit" element={<AuditPage />} />
           </Route>

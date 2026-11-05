@@ -17,11 +17,7 @@ export function TextSizeToggle() {
   }, [size]);
 
   return (
-    <div
-      className="text-size-toggle"
-      role="group"
-      aria-label={t("textSize.label")}
-    >
+    <div className="segmented" role="group" aria-label={t("textSize.label")}>
       {OPTIONS.map((opt) => (
         <button
           key={opt}

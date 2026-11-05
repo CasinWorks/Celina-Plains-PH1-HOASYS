@@ -15,18 +15,29 @@ export function PrivacyPage() {
   }, [session, navigate]);
 
   return (
-    <div className="card" style={{ maxWidth: 640, margin: "2rem auto" }}>
-      <h1 className="page-title">{t("privacy.title")}</h1>
-      <p>{t("privacy.body")}</p>
-      <button
-        type="button"
-        className="btn btn-primary"
-        onClick={() => {
-          void acceptPrivacy().then(() => navigate("/", { replace: true }));
-        }}
-      >
-        {t("privacy.accept")}
-      </button>
+    <div className="login-page">
+      <div className="login-top">
+        <div className="brand-wordmark">
+          <span className="brand-blob" aria-hidden="true">
+            CP
+          </span>
+          <span>{t("app.shortName")}</span>
+        </div>
+      </div>
+      <div className="card login-card">
+        <p className="login-eyebrow">{t("app.shortName")}</p>
+        <h1 className="page-title">{t("privacy.title")}</h1>
+        <p className="page-lead">{t("privacy.body")}</p>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => {
+            void acceptPrivacy().then(() => navigate("/", { replace: true }));
+          }}
+        >
+          {t("privacy.accept")}
+        </button>
+      </div>
     </div>
   );
 }

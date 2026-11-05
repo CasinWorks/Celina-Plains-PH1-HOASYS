@@ -4,7 +4,9 @@
     "shortName": "Celina Plains P1",
     "tagline": "Resident Portal",
     "officialFooter": "Official system of Celina Plains Phase 1 HOA",
-    "demoBanner": "DEMO DATA — Sample residents and lots for local testing only. Not live HOA records."
+    "playfulFooter": "Official portal for Celina Plains Phase 1 — dues, payments, and community finance.",
+    "demoBanner": "DEMO DATA — Sample residents and lots for local testing only. Not live HOA records.",
+    "cloudBanner": "CLOUD — Records are saved in Firebase and shared across signed-in devices. This is still demo data, not live HOA records."
   },
   "lang": {
     "label": "Language",
@@ -30,7 +32,14 @@
     "settings": "Settings",
     "audit": "Audit log",
     "logout": "Log out",
-    "changePassword": "Change password"
+    "changePassword": "Change password",
+    "more": "More",
+    "account": "Account",
+    "announcements": "Announcements",
+    "feedback": "Feedback",
+    "plans": "HOA plans",
+    "officers": "2026 candidates",
+    "voting": "Voting"
   },
   "roles": {
     "homeowner": "Homeowner",
@@ -134,6 +143,19 @@
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome, {{name}}",
+    "hello": "Hello, {{name}}",
+    "morning": "Good morning, {{name}}",
+    "afternoon": "Good afternoon, {{name}}",
+    "evening": "Good evening, {{name}}",
+    "activityLine_one": "You have {{count}} HOA item to watch today.",
+    "activityLine_other": "You have {{count}} HOA items to watch today.",
+    "upcomingDues": "Upcoming dues",
+    "snapshot": "Your finance snapshot",
+    "promoTitle": "Ready to settle your dues?",
+    "promoBody": "Upload proof of payment and the treasurer will verify it with an OR number.",
+    "dueReminders": "Due reminders",
+    "dueIn": "Due in {{days}} day(s)",
+    "overdueBy": "Overdue by {{days}} day(s)",
     "balanceDue": "Balance due",
     "nextDue": "Next due date",
     "lastPayment": "Last payment",
@@ -162,7 +184,70 @@
     "notes": "Internal notes",
     "empty": "No lots yet. Add a lot or load demo data.",
     "myLots": "My linked lot(s)",
-    "noLinked": "No lot linked to your account yet. Ask the Treasurer."
+    "myLotsLead": "Your household lot details and current balance.",
+    "noLinked": "No lot linked to your account yet. Ask the Treasurer.",
+    "drawerTitle": "Lot details",
+    "drawerHint": "Tap a lot to open the detail drawer."
+  },
+  "announcements": {
+    "title": "Announcements",
+    "lead": "Community notices from officers and the treasurer.",
+    "create": "Post announcement",
+    "fieldTitle": "Title",
+    "fieldBody": "Message",
+    "pin": "Pin to top",
+    "pinned": "Pinned",
+    "posted": "Announcement posted.",
+    "deleted": "Announcement removed.",
+    "delete": "Remove",
+    "deleteConfirm": "Remove this announcement?",
+    "empty": "No announcements yet."
+  },
+  "feedback": {
+    "title": "Complaints & suggestions",
+    "lead": "Tell the HOA what needs fixing — or what would make the community better.",
+    "create": "Submit feedback",
+    "type": "Type",
+    "complaint": "Complaint",
+    "suggestion": "Suggestion",
+    "subject": "Subject",
+    "details": "Details",
+    "noLot": "No lot linked",
+    "submitted": "Thanks — your feedback was submitted.",
+    "replied": "Reply posted.",
+    "reply": "Official reply",
+    "sendReply": "Send reply",
+    "empty": "No feedback yet.",
+    "shortLink": "Send feedback",
+    "status": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    }
+  },
+  "plans": {
+    "title": "HOA plans & progress",
+    "lead": "See what the association is working on — gates, lights, pathways, and more.",
+    "activeTitle": "Active HOA plans",
+    "create": "Add plan",
+    "fieldTitle": "Plan title",
+    "fieldDescription": "What will we do?",
+    "progress": "Progress",
+    "latestUpdate": "Latest update",
+    "updateHistory": "Update history",
+    "showHistory": "Show all {{count}} updates",
+    "hideHistory": "Show latest only",
+    "addUpdate": "Progress note",
+    "postUpdate": "Post update",
+    "created": "Plan created.",
+    "updatePosted": "Progress update posted.",
+    "empty": "No HOA plans yet.",
+    "status": {
+      "planned": "Planned",
+      "in_progress": "In progress",
+      "done": "Done"
+    }
   },
   "dues": {
     "title": "Dues",
@@ -176,7 +261,9 @@
     "opened": "Opened {{count}} new dues row(s).",
     "penaltiesUpdated": "Updated penalties on {{count}} dues row(s).",
     "myDues": "My dues",
-    "allDues": "All dues"
+    "allDues": "All dues",
+    "payNow": "Pay now",
+    "payHint": "Unpaid or partial periods show a Pay now button — tap to open the payment form with the balance filled in."
   },
   "payments": {
     "title": "Payments",
@@ -200,7 +287,9 @@
     "voided": "Payment voided.",
     "paymentNo": "Payment no.",
     "payer": "Payer",
-    "cannotViewOther": "You cannot view another household’s payment."
+    "cannotViewOther": "You cannot view another household’s payment.",
+    "payingForPeriod": "Paying for dues period {{period}}. Amount is prefilled from the remaining balance — attach proof to submit.",
+    "duesPrefillNote": "Payment for dues period {{period}}"
   },
   "expenses": {
     "title": "Expenses",
@@ -224,8 +313,78 @@
     "summaryTitle": "Homeowner summary",
     "communityArrears": "Community arrears (total)",
     "asOf": "As of {{date}}",
-    "detailedNote": "Detailed ledgers are treasurer-only.",
-    "showStatement": "Show statement"
+    "detailedNote": "Cash ledger lines are treasurer-only. Officers can still view collections progress.",
+    "showStatement": "Show statement",
+    "progressTitle": "Payment receipts progress",
+    "progressLead": "Verified payments received each month vs the expected dues target for active lots.",
+    "receivedVsExpected": "Received vs expected",
+    "collectionRate": "Monthly collection progress",
+    "collectionRateHint": "Share of the monthly dues target already received.",
+    "received": "Received",
+    "expected": "Expected",
+    "ytdReceived": "YTD received",
+    "ytdProgress": "YTD progress",
+    "bestMonth": "Best month"
+  },
+  "officers": {
+    "kicker": "CPI-1 HOA · {{year}}",
+    "title": "Election of officers",
+    "lead": "Public list of candidates posted for this year’s election.",
+    "publicLink": "View the 2026 officer candidates",
+    "backToPortal": "Back to portal",
+    "executive": "Executive officers",
+    "blockLeaders": "Block leaders — Board of Directors",
+    "blockLead": "One candidate for each block, as posted. A dash on the notice is shown as vacant.",
+    "block": "Block",
+    "candidate": "Candidate",
+    "vacant": "Vacant",
+    "secretaryNote": "The secretary will be appointed by the elected president.",
+    "source": "Transcribed from the posted CPI-1 HOA notices. This is the candidate list, not a certified election result.",
+    "roles": {
+      "president": "President",
+      "vicePresident": "Vice president",
+      "treasurer": "Treasurer",
+      "auditor": "Auditor"
+    }
+  },
+  "voting": {
+    "kicker": "CPI-1 HOA · {{year}}",
+    "title": "Online voting",
+    "lead": "One secret ballot per assigned lot. Officers choose who may vote and which block that lot votes in.",
+    "electionStatus": "Voting",
+    "turnout": "Ballots cast",
+    "status": {
+      "setup": "Not open",
+      "open": "Open",
+      "closed": "Closed"
+    },
+    "assignTitle": "Who may vote",
+    "assignLead": "Check the lots that can vote. The block decides which block leader they vote for. Executive offices are on every eligible ballot.",
+    "open": "Open voting",
+    "close": "Close voting",
+    "statusSaved": "Voting status updated.",
+    "seeCandidates": "Candidate list",
+    "household": "Household",
+    "block": "Block",
+    "eligible": "May vote",
+    "voted": "Ballot",
+    "votedYes": "Cast",
+    "votedNo": "Waiting",
+    "ballotTitle": "Your ballot",
+    "ballotLead": "This lot is assigned to block {{block}}. Vote for each candidate, or abstain.",
+    "noLot": "No lot is linked to this account.",
+    "notAssigned": "This lot is not assigned to vote. An officer or the treasurer can add it.",
+    "notOpen": "Voting is not open.",
+    "alreadyVoted": "Ballot recorded {{when}}. How you voted stays private.",
+    "for": "For",
+    "abstain": "Abstain",
+    "submit": "Submit ballot",
+    "submitted": "Ballot submitted. Thank you.",
+    "blockLeader": "Block {{blocks}} leader",
+    "resultsTitle": "Tally",
+    "resultsLead": "Counts only. Individual ballots are not shown.",
+    "contest": "Office",
+    "candidate": "Candidate"
   },
   "settings": {
     "title": "Settings",
@@ -269,6 +428,7 @@
   "errors": {
     "forbidden": "You do not have permission for this page.",
     "notFound": "Page not found.",
+    "notFoundLead": "That path wandered off the subdivision map. Let’s get you back home.",
     "goHome": "Go to dashboard"
   },
   "months": {
@@ -283,6 +443,20 @@
     "9": "September",
     "10": "October",
     "11": "November",
-    "12": "December"
+    "12": "December",
+    "short": {
+      "1": "Jan",
+      "2": "Feb",
+      "3": "Mar",
+      "4": "Apr",
+      "5": "May",
+      "6": "Jun",
+      "7": "Jul",
+      "8": "Aug",
+      "9": "Sep",
+      "10": "Oct",
+      "11": "Nov",
+      "12": "Dec"
+    }
   }
 }

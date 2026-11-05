@@ -18,14 +18,17 @@ UI code imports `getServices()` only. It never imports Dexie tables directly.
 | Denormalized display fields (`lotCode`, `payerName`) on documents | UI does not join collections |
 | Storage keys as strings | IndexedDB key today → Firebase Storage path or Supabase Storage object name later |
 
-## Firebase (likely next)
+## Firebase (wired)
 
-Suggested mapping (do **not** install SDKs until the owner asks):
+`src/services/createServices.ts` uses Firebase when `.env` contains the web app keys from `.env.example`. Restart the dev server after adding them.
 
-1. **Auth** — implement `AuthService` with Firebase Auth (email/password or custom). Keep `Session` fields the same; drop demo plaintext passwords.
-2. **Data** — one Firestore collection per entity (`users`, `lots`, `dues`, `payments`, …). Document ID = entity `id`. Use security rules mirroring the role matrix (homeowner / officer / treasurer).
-3. **Files** — `FileStorageService.put` uploads to Firebase Storage; store the path in `proofStorageKey`.
-4. Wire in `src/services/createServices.ts` by returning Firebase adapters instead of IndexedDB ones.
+1. **Auth** — `AuthService` signs in with Firebase Email/Password. A username such as `homeowner.demo` becomes `homeowner.demo@celinaplains.app`. Passwords are not stored in Firestore.
+2. **Data** — the existing ledger rules still run on a local cache. Each change is written to a Firestore collection (`users`, `lots`, `dues`, `payments`, …). Document ID = entity `id`. Live listeners refresh other signed-in devices.
+3. **Files** — proof uploads go to Firebase Storage under `proofs/{key}`.
+4. **Rules** — `firestore.rules` and `storage.rules` allow any signed-in resident to read and write. Publish them with `firebase deploy --only firestore:rules,storage` before Load DEMO data.
+5. **Demo** — Load DEMO data creates the three demo Auth users (password `demo1234`) and uploads the sample ledger. Enable Email/Password in Firebase Authentication first.
+
+IndexedDB remains the backend when the keys are absent, and Vitest keeps using it.
 
 ## Supabase (alternative)
 

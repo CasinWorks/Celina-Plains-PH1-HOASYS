@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
 import { StatusBadge } from "../components/StatusBadge";
-import { addMoney, formatPeso, subMoney } from "../domain/money";
+import { addMoney, cmpMoney, formatPeso, subMoney } from "../domain/money";
 import type { DuesCharge } from "../domain/types";
 import { getServices } from "../services/createServices";
 import { todayYmd } from "../lib/ids";
@@ -63,8 +64,30 @@ export function DuesPage() {
     }
   }
 
+  function canPay(d: DuesCharge, balance: string) {
+    if (!session) return false;
+    if (d.status !== "unpaid" && d.status !== "partial") return false;
+    if (cmpMoney(balance, "0") <= 0) return false;
+    return (
+      session.lotIds.includes(d.lotId) ||
+      hasRole("officer") ||
+      hasRole("treasurer")
+    );
+  }
+
+  function payHref(d: DuesCharge, balance: string) {
+    const period = `${d.periodYear}-${String(d.periodMonth).padStart(2, "0")}`;
+    const params = new URLSearchParams({
+      lotId: d.lotId,
+      amount: balance,
+      duesId: d.id,
+      period,
+    });
+    return `/payments?${params.toString()}`;
+  }
+
   return (
-    <div>
+    <div className="page-animate">
       <h1 className="page-title">{t("dues.title")}</h1>
       <p className="page-lead">{t("dues.lead")}</p>
       {message && (
@@ -79,9 +102,13 @@ export function DuesPage() {
       )}
 
       {isTreasurer && (
-        <div className="card">
+        <div className="card pop-in">
           <h2 className="card-title">{t("dues.openPeriod")}</h2>
-          <form onSubmit={openPeriod} className="btn-row" style={{ alignItems: "end" }}>
+          <form
+            onSubmit={openPeriod}
+            className="btn-row"
+            style={{ alignItems: "end" }}
+          >
             <div className="form-field" style={{ marginBottom: 0 }}>
               <label htmlFor="year">{t("common.year")}</label>
               <input
@@ -120,12 +147,13 @@ export function DuesPage() {
         </div>
       )}
 
-      <div className="card">
+      <div className="card pop-in">
         <h2 className="card-title">
           {isTreasurer || hasRole("officer")
             ? t("dues.allDues")
             : t("dues.myDues")}
         </h2>
+        <p className="meta-line">{t("dues.payHint")}</p>
         {rows.length === 0 ? (
           <p>{t("dues.empty")}</p>
         ) : (
@@ -141,6 +169,7 @@ export function DuesPage() {
                   <th scope="col">{t("common.balance")}</th>
                   <th scope="col">{t("common.status")}</th>
                   <th scope="col">{t("common.dueDate")}</th>
+                  <th scope="col">{t("common.actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -149,8 +178,12 @@ export function DuesPage() {
                     addMoney(d.amountDue, d.penaltyAmount),
                     d.amountPaid,
                   );
+                  const payable = canPay(d, bal);
                   return (
-                    <tr key={d.id}>
+                    <tr
+                      key={d.id}
+                      className={payable ? "dues-row-payable" : undefined}
+                    >
                       <td data-label={t("common.lot")}>{d.lotCode}</td>
                       <td data-label={t("common.period")}>
                         {d.periodYear}-{String(d.periodMonth).padStart(2, "0")}
@@ -171,6 +204,18 @@ export function DuesPage() {
                         <StatusBadge status={d.status} />
                       </td>
                       <td data-label={t("common.dueDate")}>{d.dueDate}</td>
+                      <td data-label={t("common.actions")}>
+                        {payable ? (
+                          <Link
+                            className="btn btn-cta btn-pay"
+                            to={payHref(d, bal)}
+                          >
+                            {t("dues.payNow")}
+                          </Link>
+                        ) : (
+                          <span className="meta-line">—</span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}

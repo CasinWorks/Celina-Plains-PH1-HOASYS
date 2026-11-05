@@ -4,7 +4,9 @@
     "shortName": "Celina Plains P1",
     "tagline": "Resident Portal",
     "officialFooter": "Opisyal na sistema ng Celina Plains Phase 1 HOA",
-    "demoBanner": "DEMO DATA — Sample na residente at lot para sa local testing lang. Hindi ito live na record ng HOA."
+    "playfulFooter": "Opisyal na portal ng Celina Plains Phase 1 — dues, payments, at community finance.",
+    "demoBanner": "DEMO DATA — Sample na residente at lot para sa local testing lang. Hindi ito live na record ng HOA.",
+    "cloudBanner": "CLOUD — Naka-save ang mga record sa Firebase at sabay na makikita sa mga naka-sign in na device. Demo data pa rin ito, hindi live na record ng HOA."
   },
   "lang": {
     "label": "Wika",
@@ -30,7 +32,14 @@
     "settings": "Settings",
     "audit": "Audit log",
     "logout": "Mag-log out",
-    "changePassword": "Palitan ang password"
+    "changePassword": "Palitan ang password",
+    "more": "Higit pa",
+    "account": "Account",
+    "announcements": "Mga anunsyo",
+    "feedback": "Feedback",
+    "plans": "Mga plano ng HOA",
+    "officers": "Mga kandidato 2026",
+    "voting": "Pagboto"
   },
   "roles": {
     "homeowner": "Homeowner",
@@ -134,6 +143,19 @@
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Kumusta, {{name}}",
+    "hello": "Kumusta, {{name}}",
+    "morning": "Magandang umaga, {{name}}",
+    "afternoon": "Magandang hapon, {{name}}",
+    "evening": "Magandang gabi, {{name}}",
+    "activityLine_one": "May {{count}} item ng HOA na dapat ninyong tingnan ngayon.",
+    "activityLine_other": "May {{count}} item ng HOA na dapat ninyong tingnan ngayon.",
+    "upcomingDues": "Papalapit na dues",
+    "snapshot": "Snapshot ng inyong finance",
+    "promoTitle": "Handa na bang bayaran ang dues?",
+    "promoBody": "Mag-upload ng proof of payment at i-verify ito ng treasurer gamit ang OR number.",
+    "dueReminders": "Mga paalala sa dues",
+    "dueIn": "Due sa loob ng {{days}} araw",
+    "overdueBy": "Overdue ng {{days}} araw",
     "balanceDue": "Balance due",
     "nextDue": "Susunod na due date",
     "lastPayment": "Huling payment",
@@ -162,7 +184,70 @@
     "notes": "Internal notes",
     "empty": "Wala pang lot. Magdagdag o mag-load ng demo data.",
     "myLots": "Mga lot na naka-link sa inyo",
-    "noLinked": "Wala pang lot na naka-link sa account ninyo. Sabihan ang Treasurer."
+    "myLotsLead": "Detalye ng inyong household lot at kasalukuyang balance.",
+    "noLinked": "Wala pang lot na naka-link sa account ninyo. Sabihan ang Treasurer.",
+    "drawerTitle": "Detalye ng lot",
+    "drawerHint": "I-tap ang lot para buksan ang detail drawer."
+  },
+  "announcements": {
+    "title": "Mga anunsyo",
+    "lead": "Mga notice mula sa officers at treasurer.",
+    "create": "Mag-post ng anunsyo",
+    "fieldTitle": "Pamagat",
+    "fieldBody": "Mensahe",
+    "pin": "I-pin sa itaas",
+    "pinned": "Naka-pin",
+    "posted": "Na-post ang anunsyo.",
+    "deleted": "Tinanggal ang anunsyo.",
+    "delete": "Tanggalin",
+    "deleteConfirm": "Tanggalin ang anunsyo na ito?",
+    "empty": "Wala pang anunsyo."
+  },
+  "feedback": {
+    "title": "Mga reklamo at suhestiyon",
+    "lead": "Sabihin sa HOA ang kailangang ayusin — o ideya para mas maganda ang komunidad.",
+    "create": "Mag-submit ng feedback",
+    "type": "Uri",
+    "complaint": "Reklamo",
+    "suggestion": "Suhestiyon",
+    "subject": "Paksa",
+    "details": "Detalye",
+    "noLot": "Walang naka-link na lot",
+    "submitted": "Salamat — na-submit ang feedback ninyo.",
+    "replied": "Na-post ang reply.",
+    "reply": "Opisyal na sagot",
+    "sendReply": "Ipadala ang sagot",
+    "empty": "Wala pang feedback.",
+    "shortLink": "Magpadala ng feedback",
+    "status": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    }
+  },
+  "plans": {
+    "title": "Mga plano at progreso ng HOA",
+    "lead": "Tingnan ang ginagawa ng association — gate, ilaw, pathway, at iba pa.",
+    "activeTitle": "Aktibong plano ng HOA",
+    "create": "Magdagdag ng plano",
+    "fieldTitle": "Pamagat ng plano",
+    "fieldDescription": "Ano ang gagawin?",
+    "progress": "Progreso",
+    "latestUpdate": "Pinakabagong update",
+    "updateHistory": "Kasaysayan ng update",
+    "showHistory": "Ipakita ang {{count}} updates",
+    "hideHistory": "Pinakabago lang",
+    "addUpdate": "Progress note",
+    "postUpdate": "I-post ang update",
+    "created": "Nagawa ang plano.",
+    "updatePosted": "Na-post ang progress update.",
+    "empty": "Wala pang plano ng HOA.",
+    "status": {
+      "planned": "Planned",
+      "in_progress": "In progress",
+      "done": "Done"
+    }
   },
   "dues": {
     "title": "Dues",
@@ -176,7 +261,9 @@
     "opened": "Nag-open ng {{count}} bagong dues row.",
     "penaltiesUpdated": "Na-update ang penalty sa {{count}} dues row.",
     "myDues": "Dues ko",
-    "allDues": "Lahat ng dues"
+    "allDues": "Lahat ng dues",
+    "payNow": "Magbayad",
+    "payHint": "Ang unpaid o partial na period ay may Magbayad na button — i-tap para buksan ang payment form na may balance."
   },
   "payments": {
     "title": "Payments",
@@ -200,7 +287,9 @@
     "voided": "Na-void ang payment.",
     "paymentNo": "Payment no.",
     "payer": "Nagbayad",
-    "cannotViewOther": "Hindi ninyo pwedeng tingnan ang payment ng ibang household."
+    "cannotViewOther": "Hindi ninyo pwedeng tingnan ang payment ng ibang household.",
+    "payingForPeriod": "Babayaran ang dues period {{period}}. Naka-prefill ang amount mula sa balance — mag-attach ng proof para i-submit.",
+    "duesPrefillNote": "Bayad para sa dues period {{period}}"
   },
   "expenses": {
     "title": "Gastos (Expenses)",
@@ -224,8 +313,78 @@
     "summaryTitle": "Buod para sa homeowner",
     "communityArrears": "Community arrears (kabuuan)",
     "asOf": "Simula {{date}}",
-    "detailedNote": "Detailed ledger ay para sa treasurer lang.",
-    "showStatement": "Ipakita ang statement"
+    "detailedNote": "Cash ledger lines ay para sa treasurer. Makikita pa rin ng officer ang progress ng collections.",
+    "showStatement": "Ipakita ang statement",
+    "progressTitle": "Progress ng bayarin na natanggap",
+    "progressLead": "Verified na bayad kada buwan kumpara sa expected dues target ng active lots.",
+    "receivedVsExpected": "Natanggap vs expected",
+    "collectionRate": "Buwanang collection progress",
+    "collectionRateHint": "Bahagi ng buwanang dues target na natanggap na.",
+    "received": "Natanggap",
+    "expected": "Expected",
+    "ytdReceived": "YTD natanggap",
+    "ytdProgress": "YTD progress",
+    "bestMonth": "Pinakamagandang buwan"
+  },
+  "officers": {
+    "kicker": "CPI-1 HOA · {{year}}",
+    "title": "Halalan ng mga opisyal",
+    "lead": "Pampublikong listahan ng mga kandidato para sa halalan ngayong taon.",
+    "publicLink": "Tingnan ang mga kandidato sa opisyal para sa 2026",
+    "backToPortal": "Bumalik sa portal",
+    "executive": "Mga executive officer",
+    "blockLeaders": "Mga block leader — Board of Directors",
+    "blockLead": "Isang kandidato kada block, ayon sa nakapaskil. Ang gitling sa notice ay vacant.",
+    "block": "Block",
+    "candidate": "Kandidato",
+    "vacant": "Vacant",
+    "secretaryNote": "Ang secretary ay itatalaga ng mahalal na presidente.",
+    "source": "Kinopya mula sa nakapaskil na notice ng CPI-1 HOA. Listahan ito ng mga kandidato, hindi certified na resulta ng halalan.",
+    "roles": {
+      "president": "President",
+      "vicePresident": "Vice president",
+      "treasurer": "Treasurer",
+      "auditor": "Auditor"
+    }
+  },
+  "voting": {
+    "kicker": "CPI-1 HOA · {{year}}",
+    "title": "Online na pagboto",
+    "lead": "Isang lihim na balota kada lot na nakatalaga. Pinipili ng mga opisyal kung sino ang boboto at saang block.",
+    "electionStatus": "Pagboto",
+    "turnout": "Mga balotang naisumite",
+    "status": {
+      "setup": "Hindi pa bukas",
+      "open": "Bukas",
+      "closed": "Sarado"
+    },
+    "assignTitle": "Sino ang boboto",
+    "assignLead": "I-check ang mga lot na maaaring bumoto. Ang block ang magpapasya kung sinong block leader ang kanilang bobotohan. Lahat ng eligible na lot ay boboto sa mga executive office.",
+    "open": "Buksan ang pagboto",
+    "close": "Isara ang pagboto",
+    "statusSaved": "Na-update ang status ng pagboto.",
+    "seeCandidates": "Listahan ng kandidato",
+    "household": "Household",
+    "block": "Block",
+    "eligible": "Maaaring bumoto",
+    "voted": "Balota",
+    "votedYes": "Naisumite",
+    "votedNo": "Hinihintay",
+    "ballotTitle": "Iyong balota",
+    "ballotLead": "Ang lot na ito ay nakatalaga sa block {{block}}. Bumoto sa bawat kandidato, o mag-abstain.",
+    "noLot": "Walang lot na naka-link sa account na ito.",
+    "notAssigned": "Hindi nakatalaga ang lot na ito para bumoto. Maaari itong idagdag ng opisyal o treasurer.",
+    "notOpen": "Hindi bukas ang pagboto.",
+    "alreadyVoted": "Naitala ang balota noong {{when}}. Mananatiling pribado ang boto mo.",
+    "for": "Oo",
+    "abstain": "Abstain",
+    "submit": "Ipasa ang balota",
+    "submitted": "Naipasa ang balota. Salamat.",
+    "blockLeader": "Block {{blocks}} leader",
+    "resultsTitle": "Bilang",
+    "resultsLead": "Bilang lang. Hindi ipinapakita ang indibidwal na balota.",
+    "contest": "Posisyon",
+    "candidate": "Kandidato"
   },
   "settings": {
     "title": "Settings",
@@ -269,6 +428,7 @@
   "errors": {
     "forbidden": "Wala kayong permission para sa page na ito.",
     "notFound": "Hindi makita ang page.",
+    "notFoundLead": "Naligaw ang path na iyan sa mapa ng subdivision. Balik tayo sa dashboard.",
     "goHome": "Pumunta sa dashboard"
   },
   "months": {
@@ -283,6 +443,20 @@
     "9": "Setyembre",
     "10": "Oktubre",
     "11": "Nobyembre",
-    "12": "Disyembre"
+    "12": "Disyembre",
+    "short": {
+      "1": "Ene",
+      "2": "Peb",
+      "3": "Mar",
+      "4": "Abr",
+      "5": "May",
+      "6": "Hun",
+      "7": "Hul",
+      "8": "Ago",
+      "9": "Set",
+      "10": "Okt",
+      "11": "Nob",
+      "12": "Dis"
+    }
   }
 }

@@ -14,11 +14,7 @@ export function LanguageSwitch() {
   }
 
   return (
-    <div
-      className="text-size-toggle"
-      role="group"
-      aria-label={t("lang.switch")}
-    >
+    <div className="segmented" role="group" aria-label={t("lang.switch")}>
       <button
         type="button"
         aria-pressed={current === "en"}

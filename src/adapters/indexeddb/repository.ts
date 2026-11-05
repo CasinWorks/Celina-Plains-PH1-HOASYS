@@ -1,15 +1,33 @@
 import { addMoney, cmpMoney, money, subMoney } from "../../domain/money";
 import type {
+  Announcement,
+  Ballot,
   DuesCharge,
+  Election,
+  ElectionTally,
+  ElectionView,
   Expense,
   ExportBundle,
+  FeedbackItem,
+  FeedbackReply,
   FinanceAuditLog,
+  HoaPlan,
+  HoaPlanUpdate,
   Lot,
   Payment,
   PaymentAllocation,
+  Session,
   SiteConfig,
   UserAccount,
+  VoterAssignment,
+  VoteChoice,
 } from "../../domain/types";
+import {
+  buildElectionContests,
+  contestsForBlock,
+  ELECTION_ID,
+  ELECTION_YEAR,
+} from "../../content/election2026";
 import { DEFAULT_SITE_CONFIG } from "../../lib/config";
 import { createId, nowIso, todayYmd } from "../../lib/ids";
 import type { FileStorageService, HoaRepository } from "../../services/interfaces";
@@ -17,6 +35,10 @@ import { getDb, type HoaDatabase } from "./db";
 import { seedDemoBundle } from "../../seed/demoData";
 
 const CONFIG_ID = "site";
+
+function canManageElection(actor: Session): boolean {
+  return actor.roles.includes("officer") || actor.roles.includes("treasurer");
+}
 
 function daysBetween(fromYmd: string, toYmd: string): number {
   const a = new Date(fromYmd + "T00:00:00");
@@ -390,76 +412,106 @@ export function createIndexedDbRepository(
       if (!orNumber.trim()) throw new Error("Official receipt (OR) number is required.");
 
       const before = { ...payment };
-      const targetIds =
-        duesChargeIds && duesChargeIds.length > 0
-          ? duesChargeIds
-          : payment.allocatedDuesIds;
+      const strictPreferred = Boolean(
+        duesChargeIds && duesChargeIds.length > 0,
+      );
+      const preferredIds = strictPreferred
+        ? duesChargeIds!
+        : payment.allocatedDuesIds;
 
-      let open = await db.dues
-        .where("lotId")
-        .equals(payment.lotId)
-        .filter((d) => d.status !== "paid" && d.status !== "waived")
-        .toArray();
-      open.sort(
+      const allOpen = (
+        await db.dues
+          .where("lotId")
+          .equals(payment.lotId)
+          .filter((d) => d.status !== "paid" && d.status !== "waived")
+          .toArray()
+      ).sort(
         (a, b) =>
           a.periodYear - b.periodYear || a.periodMonth - b.periodMonth,
       );
-      if (targetIds.length > 0) {
-        open = open.filter((d) => targetIds.includes(d.id));
+
+      // Prefer intended dues when they still have a balance; otherwise fall
+      // back to any open dues on the lot so the verify queue never dead-ends.
+      // Explicit duesChargeIds stay strict (used by treasurer record-payment).
+      let open = allOpen;
+      if (preferredIds.length > 0) {
+        const preferred = allOpen.filter((d) => preferredIds.includes(d.id));
+        if (strictPreferred) {
+          open = preferred;
+        } else {
+          const preferredHasBalance = preferred.some((d) => {
+            const bal = subMoney(
+              addMoney(d.amountDue, d.penaltyAmount),
+              d.amountPaid,
+            );
+            return cmpMoney(bal, "0") > 0;
+          });
+          if (preferredHasBalance) open = preferred;
+        }
       }
 
       let remaining = money(payment.amount);
       const allocations: PaymentAllocation[] = [];
       const allocatedIds: string[] = [];
 
-      for (const charge of open) {
-        if (cmpMoney(remaining, "0") <= 0) break;
-        const bal = subMoney(
-          addMoney(charge.amountDue, charge.penaltyAmount),
-          charge.amountPaid,
-        );
-        if (cmpMoney(bal, "0") <= 0) continue;
-        const apply =
-          cmpMoney(remaining, bal) <= 0 ? remaining : bal;
-        const alloc: PaymentAllocation = {
-          id: createId("alloc"),
-          paymentId: payment.id,
-          duesChargeId: charge.id,
-          amount: apply,
-          createdAt: nowIso(),
-        };
-        await db.allocations.add(alloc);
-        allocations.push(alloc);
-        allocatedIds.push(charge.id);
+      async function applyToCharges(charges: DuesCharge[]) {
+        for (const charge of charges) {
+          if (cmpMoney(remaining, "0") <= 0) break;
+          const bal = subMoney(
+            addMoney(charge.amountDue, charge.penaltyAmount),
+            charge.amountPaid,
+          );
+          if (cmpMoney(bal, "0") <= 0) continue;
+          const apply = cmpMoney(remaining, bal) <= 0 ? remaining : bal;
+          const alloc: PaymentAllocation = {
+            id: createId("alloc"),
+            paymentId: payment.id,
+            duesChargeId: charge.id,
+            amount: apply,
+            createdAt: nowIso(),
+          };
+          await db.allocations.add(alloc);
+          allocations.push(alloc);
+          allocatedIds.push(charge.id);
 
-        const nextPaid = addMoney(charge.amountPaid, apply);
-        const nextCharge: DuesCharge = {
-          ...charge,
-          amountPaid: nextPaid,
-          updatedAt: nowIso(),
-        };
-        const refreshed = refreshDuesStatus(nextCharge);
-        nextCharge.status = refreshed.status;
-        await db.dues.put(nextCharge);
-        remaining = subMoney(remaining, apply);
+          const nextPaid = addMoney(charge.amountPaid, apply);
+          const nextCharge: DuesCharge = {
+            ...charge,
+            amountPaid: nextPaid,
+            updatedAt: nowIso(),
+          };
+          const refreshed = refreshDuesStatus(nextCharge);
+          nextCharge.status = refreshed.status;
+          await db.dues.put(nextCharge);
+          remaining = subMoney(remaining, apply);
 
-        await writeAudit(db, {
-          entity: "allocation",
-          entityId: alloc.id,
-          action: "allocate",
-          before: null,
-          after: alloc as unknown as Record<string, unknown>,
-          actorUserId: actor.userId,
-          actorName: actor.fullName,
-          note: "",
-        });
+          await writeAudit(db, {
+            entity: "allocation",
+            entityId: alloc.id,
+            action: "allocate",
+            before: null,
+            after: alloc as unknown as Record<string, unknown>,
+            actorUserId: actor.userId,
+            actorName: actor.fullName,
+            note: "",
+          });
+        }
       }
 
-      if (allocations.length === 0) {
-        throw new Error("No open dues to allocate this payment against.");
+      await applyToCharges(open);
+
+      // Soft path: spill leftover to other open dues on the lot.
+      if (
+        !strictPreferred &&
+        cmpMoney(remaining, "0") > 0 &&
+        preferredIds.length > 0 &&
+        open !== allOpen
+      ) {
+        const rest = allOpen.filter((d) => !allocatedIds.includes(d.id));
+        await applyToCharges(rest);
       }
-      if (targetIds.length > 0 && cmpMoney(remaining, "0") > 0) {
-        // Roll back allocations already written in this call by reversing dues
+
+      if (strictPreferred && cmpMoney(remaining, "0") > 0) {
         for (const alloc of allocations) {
           const charge = await db.dues.get(alloc.duesChargeId);
           if (charge) {
@@ -486,8 +538,14 @@ export function createIndexedDbRepository(
         orNumber: orNumber.trim(),
         verifiedByUserId: actor.userId,
         verifiedAt: nowIso(),
-        allocatedDuesIds: allocatedIds,
+        allocatedDuesIds:
+          allocatedIds.length > 0 ? allocatedIds : payment.allocatedDuesIds,
         updatedAt: nowIso(),
+        notes:
+          allocations.length === 0 &&
+          !(payment.notes ?? "").includes("[unallocated]")
+            ? `${payment.notes ?? ""} [unallocated credit]`.trim()
+            : payment.notes,
       };
       await db.payments.put(after);
       await writeAudit(db, {
@@ -808,9 +866,468 @@ export function createIndexedDbRepository(
       };
     },
 
+    async monthlyPaymentProgress(year) {
+      const cfg = await this.getSiteConfig();
+      const activeLots = await db.lots.filter((l) => l.isActive).toArray();
+      const expected = money(
+        Number(cfg.monthlyDuesAmount) * Math.max(activeLots.length, 1),
+      );
+      const payments = await db.payments
+        .filter((p) => p.status === "verified" && !p.isVoid && !!p.verifiedAt)
+        .toArray();
+      const dues = await db.dues
+        .filter((d) => d.periodYear === year && d.status !== "waived")
+        .toArray();
+
+      return Array.from({ length: 12 }, (_, i) => {
+        const month = i + 1;
+        const monthPayments = payments.filter((p) => {
+          const d = new Date(p.verifiedAt!);
+          return d.getFullYear() === year && d.getMonth() + 1 === month;
+        });
+        const received = monthPayments.reduce(
+          (s, p) => addMoney(s, p.amount),
+          "0.00",
+        );
+        const billed = dues
+          .filter((d) => d.periodMonth === month)
+          .reduce(
+            (s, d) => addMoney(s, addMoney(d.amountDue, d.penaltyAmount)),
+            "0.00",
+          );
+        const expectedNum = Number(expected);
+        const progressPct =
+          expectedNum > 0
+            ? Math.round((Number(received) / expectedNum) * 1000) / 10
+            : null;
+        return {
+          year,
+          month,
+          received,
+          expected,
+          billed,
+          paymentCount: monthPayments.length,
+          progressPct,
+        };
+      });
+    },
+
     async listAuditLogs(limit = 100) {
       const rows = await db.auditLogs.orderBy("timestamp").reverse().toArray();
       return rows.slice(0, limit);
+    },
+
+    async listAnnouncements() {
+      const rows = await db.announcements.toArray();
+      return rows.sort((a, b) => {
+        if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+        return b.publishedAt.localeCompare(a.publishedAt);
+      });
+    },
+
+    async createAnnouncement(input, actor) {
+      if (!actor.roles.includes("officer") && !actor.roles.includes("treasurer")) {
+        throw new Error("Only officers or the treasurer can post announcements.");
+      }
+      const row: Announcement = {
+        id: createId("ann"),
+        title: input.title.trim(),
+        body: input.body.trim(),
+        pinned: Boolean(input.pinned),
+        authorUserId: actor.userId,
+        authorName: actor.fullName,
+        publishedAt: nowIso(),
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+      };
+      if (!row.title || !row.body) throw new Error("Title and body are required.");
+      await db.announcements.add(row);
+      return row;
+    },
+
+    async updateAnnouncement(id, patch, actor) {
+      if (!actor.roles.includes("officer") && !actor.roles.includes("treasurer")) {
+        throw new Error("Only officers or the treasurer can edit announcements.");
+      }
+      const before = await db.announcements.get(id);
+      if (!before) throw new Error("Announcement not found.");
+      const after: Announcement = {
+        ...before,
+        ...patch,
+        title: patch.title !== undefined ? patch.title.trim() : before.title,
+        body: patch.body !== undefined ? patch.body.trim() : before.body,
+        updatedAt: nowIso(),
+      };
+      await db.announcements.put(after);
+      return after;
+    },
+
+    async deleteAnnouncement(id, actor) {
+      if (!actor.roles.includes("officer") && !actor.roles.includes("treasurer")) {
+        throw new Error("Only officers or the treasurer can delete announcements.");
+      }
+      await db.announcements.delete(id);
+    },
+
+    async listFeedback(filter) {
+      let rows = await db.feedbackItems.toArray();
+      if (filter?.type) rows = rows.filter((r) => r.type === filter.type);
+      if (filter?.status) rows = rows.filter((r) => r.status === filter.status);
+      return rows.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    },
+
+    async createFeedback(input, actor) {
+      let lotCode: string | null = null;
+      if (input.lotId) {
+        const lot = await db.lots.get(input.lotId);
+        if (!lot) throw new Error("Lot not found.");
+        lotCode = lot.lotCode;
+      }
+      const row: FeedbackItem = {
+        id: createId("fb"),
+        type: input.type,
+        subject: input.subject.trim(),
+        body: input.body.trim(),
+        status: "open",
+        lotId: input.lotId ?? null,
+        lotCode,
+        authorUserId: actor.userId,
+        authorName: actor.fullName,
+        replies: [],
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+      };
+      if (!row.subject || !row.body) {
+        throw new Error("Subject and details are required.");
+      }
+      await db.feedbackItems.add(row);
+      return row;
+    },
+
+    async updateFeedbackStatus(id, status, actor) {
+      if (!actor.roles.includes("officer") && !actor.roles.includes("treasurer")) {
+        throw new Error("Only officers or the treasurer can update feedback status.");
+      }
+      const before = await db.feedbackItems.get(id);
+      if (!before) throw new Error("Feedback not found.");
+      const after: FeedbackItem = {
+        ...before,
+        status,
+        updatedAt: nowIso(),
+      };
+      await db.feedbackItems.put(after);
+      return after;
+    },
+
+    async replyToFeedback(id, body, actor) {
+      if (!actor.roles.includes("officer") && !actor.roles.includes("treasurer")) {
+        throw new Error("Only officers or the treasurer can reply.");
+      }
+      const before = await db.feedbackItems.get(id);
+      if (!before) throw new Error("Feedback not found.");
+      const reply: FeedbackReply = {
+        id: createId("fbr"),
+        authorUserId: actor.userId,
+        authorName: actor.fullName,
+        body: body.trim(),
+        createdAt: nowIso(),
+      };
+      if (!reply.body) throw new Error("Reply cannot be empty.");
+      const after: FeedbackItem = {
+        ...before,
+        replies: [...before.replies, reply],
+        status: before.status === "open" ? "in_progress" : before.status,
+        updatedAt: nowIso(),
+      };
+      await db.feedbackItems.put(after);
+      return after;
+    },
+
+    async listHoaPlans() {
+      const rows = await db.hoaPlans.toArray();
+      const rank = { in_progress: 0, planned: 1, done: 2 } as const;
+      return rows.sort(
+        (a, b) =>
+          rank[a.status] - rank[b.status] ||
+          b.updatedAt.localeCompare(a.updatedAt),
+      );
+    },
+
+    async createHoaPlan(input, actor) {
+      if (!actor.roles.includes("officer") && !actor.roles.includes("treasurer")) {
+        throw new Error("Only officers or the treasurer can create plans.");
+      }
+      const row: HoaPlan = {
+        id: createId("plan"),
+        title: input.title.trim(),
+        description: input.description.trim(),
+        status: input.status ?? "planned",
+        progressPct: Math.min(100, Math.max(0, input.progressPct ?? 0)),
+        updates: [],
+        authorUserId: actor.userId,
+        authorName: actor.fullName,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+      };
+      if (!row.title || !row.description) {
+        throw new Error("Title and description are required.");
+      }
+      await db.hoaPlans.add(row);
+      return row;
+    },
+
+    async updateHoaPlan(id, patch, actor) {
+      if (!actor.roles.includes("officer") && !actor.roles.includes("treasurer")) {
+        throw new Error("Only officers or the treasurer can update plans.");
+      }
+      const before = await db.hoaPlans.get(id);
+      if (!before) throw new Error("Plan not found.");
+      const after: HoaPlan = {
+        ...before,
+        ...patch,
+        title: patch.title !== undefined ? patch.title.trim() : before.title,
+        description:
+          patch.description !== undefined
+            ? patch.description.trim()
+            : before.description,
+        progressPct:
+          patch.progressPct !== undefined
+            ? Math.min(100, Math.max(0, patch.progressPct))
+            : before.progressPct,
+        updatedAt: nowIso(),
+      };
+      await db.hoaPlans.put(after);
+      return after;
+    },
+
+    async addHoaPlanUpdate(id, body, actor) {
+      if (!actor.roles.includes("officer") && !actor.roles.includes("treasurer")) {
+        throw new Error("Only officers or the treasurer can post plan updates.");
+      }
+      const before = await db.hoaPlans.get(id);
+      if (!before) throw new Error("Plan not found.");
+      const update: HoaPlanUpdate = {
+        id: createId("plu"),
+        body: body.trim(),
+        authorUserId: actor.userId,
+        authorName: actor.fullName,
+        createdAt: nowIso(),
+      };
+      if (!update.body) throw new Error("Update cannot be empty.");
+      const after: HoaPlan = {
+        ...before,
+        updates: [update, ...before.updates],
+        updatedAt: nowIso(),
+      };
+      await db.hoaPlans.put(after);
+      return after;
+    },
+
+    async ensureElection(actor) {
+      let election = await db.elections.get(ELECTION_ID);
+      if (!election) {
+        const ts = nowIso();
+        election = {
+          id: ELECTION_ID,
+          year: ELECTION_YEAR,
+          title: "CPI-1 HOA election of officers",
+          status: "open",
+          createdAt: ts,
+          updatedAt: ts,
+        };
+        await db.elections.add(election);
+        await db.electionContests.bulkAdd(buildElectionContests(election.id));
+      }
+      const lots = await db.lots.filter((lot) => lot.isActive).toArray();
+      const existing = await db.voterAssignments
+        .where("electionId")
+        .equals(election.id)
+        .toArray();
+      const have = new Set(existing.map((row) => row.lotId));
+      const missing: VoterAssignment[] = lots
+        .filter((lot) => !have.has(lot.id))
+        .map((lot) => ({
+          id: createId("voter"),
+          electionId: election!.id,
+          lotId: lot.id,
+          lotCode: lot.lotCode,
+          householdName: lot.householdName,
+          block: lot.block || "",
+          eligible: true,
+          assignedByUserId: "system",
+          updatedAt: nowIso(),
+        }));
+      if (missing.length) await db.voterAssignments.bulkAdd(missing);
+      return this.electionView(actor);
+    },
+
+    async setElectionStatus(status, actor) {
+      if (!canManageElection(actor)) {
+        throw new Error("Only officers or the treasurer can open or close voting.");
+      }
+      const election = await db.elections.get(ELECTION_ID);
+      if (!election) throw new Error("Election not found.");
+      const after: Election = { ...election, status, updatedAt: nowIso() };
+      await db.elections.put(after);
+      await writeAudit(db, {
+        entity: "config",
+        entityId: election.id,
+        action: "update",
+        before: election as unknown as Record<string, unknown>,
+        after: after as unknown as Record<string, unknown>,
+        actorUserId: actor.userId,
+        actorName: actor.fullName,
+        note: `Voting ${status}`,
+      });
+      return this.electionView(actor);
+    },
+
+    async setVoterAssignment(input, actor) {
+      if (!canManageElection(actor)) {
+        throw new Error("Only officers or the treasurer can assign voters.");
+      }
+      const election = await db.elections.get(ELECTION_ID);
+      if (!election) throw new Error("Election not found.");
+      const lot = await db.lots.get(input.lotId);
+      if (!lot) throw new Error("Lot not found.");
+      const block = input.block.trim();
+      if (!block) throw new Error("Assign a block so the lot knows which block leader to vote for.");
+      const ballot = await db.ballots
+        .where("[electionId+lotId]")
+        .equals([election.id, lot.id])
+        .first();
+      if (ballot) {
+        throw new Error("This lot already voted. The assignment is locked.");
+      }
+      const current = await db.voterAssignments
+        .where("[electionId+lotId]")
+        .equals([election.id, lot.id])
+        .first();
+      const row: VoterAssignment = {
+        id: current?.id ?? createId("voter"),
+        electionId: election.id,
+        lotId: lot.id,
+        lotCode: lot.lotCode,
+        householdName: lot.householdName,
+        block,
+        eligible: input.eligible,
+        assignedByUserId: actor.userId,
+        updatedAt: nowIso(),
+      };
+      await db.voterAssignments.put(row);
+      return this.electionView(actor);
+    },
+
+    async castBallot(input, actor) {
+      const election = await db.elections.get(ELECTION_ID);
+      if (!election) throw new Error("Election not found.");
+      if (election.status !== "open") {
+        throw new Error("Voting is not open.");
+      }
+      if (!actor.lotIds.includes(input.lotId)) {
+        throw new Error("You can only vote for your own lot.");
+      }
+      const assignment = await db.voterAssignments
+        .where("[electionId+lotId]")
+        .equals([election.id, input.lotId])
+        .first();
+      if (!assignment?.eligible) {
+        throw new Error("This lot is not assigned to vote.");
+      }
+      const existing = await db.ballots
+        .where("[electionId+lotId]")
+        .equals([election.id, input.lotId])
+        .first();
+      if (existing) throw new Error("This lot has already voted.");
+
+      const contests = await db.electionContests
+        .where("electionId")
+        .equals(election.id)
+        .toArray();
+      const required = contestsForBlock(contests, assignment.block);
+      const requiredIds = new Set(required.map((contest) => contest.id));
+      const seen = new Set<string>();
+      for (const choice of input.choices) {
+        if (!requiredIds.has(choice.contestId)) {
+          throw new Error("Ballot includes a contest this lot cannot vote in.");
+        }
+        if (choice.choice !== "for" && choice.choice !== "abstain") {
+          throw new Error("Each vote must be for the candidate or an abstention.");
+        }
+        if (seen.has(choice.contestId)) throw new Error("Duplicate contest on the ballot.");
+        seen.add(choice.contestId);
+      }
+      if (seen.size !== requiredIds.size) {
+        throw new Error("Vote on every contest assigned to this lot.");
+      }
+
+      const ballot: Ballot = {
+        id: createId("ballot"),
+        electionId: election.id,
+        lotId: input.lotId,
+        voterUserId: actor.userId,
+        voterName: actor.fullName,
+        choices: input.choices.map((choice) => ({
+          contestId: choice.contestId,
+          choice: choice.choice as VoteChoice,
+        })),
+        submittedAt: nowIso(),
+      };
+      await db.ballots.add(ballot);
+      await writeAudit(db, {
+        entity: "config",
+        entityId: ballot.id,
+        action: "create",
+        before: null,
+        after: { lotId: ballot.lotId, electionId: ballot.electionId },
+        actorUserId: actor.userId,
+        actorName: actor.fullName,
+        note: "Ballot submitted. Choices are not stored in the audit log.",
+      });
+      return this.electionView(actor);
+    },
+
+    async electionView(actor): Promise<ElectionView> {
+      const election = await db.elections.get(ELECTION_ID);
+      if (!election) throw new Error("Election not found.");
+      const contests = (
+        await db.electionContests.where("electionId").equals(election.id).toArray()
+      ).sort((a, b) => a.sortOrder - b.sortOrder);
+      const assignments = await db.voterAssignments
+        .where("electionId")
+        .equals(election.id)
+        .toArray();
+      const ballots = await db.ballots
+        .where("electionId")
+        .equals(election.id)
+        .toArray();
+      const votedLots = new Set(ballots.map((ballot) => ballot.lotId));
+      const tallies: ElectionTally[] = contests.map((contest) => {
+        let votesFor = 0;
+        let abstain = 0;
+        for (const ballot of ballots) {
+          const choice = ballot.choices.find((row) => row.contestId === contest.id);
+          if (!choice) continue;
+          if (choice.choice === "for") votesFor += 1;
+          else abstain += 1;
+        }
+        return { contestId: contest.id, votesFor, abstain };
+      });
+      const mine = new Set(actor.lotIds);
+      return {
+        election,
+        contests,
+        tallies,
+        eligibleCount: assignments.filter((row) => row.eligible).length,
+        votedCount: ballots.length,
+        myAssignments: assignments.filter((row) => mine.has(row.lotId)),
+        myBallots: ballots.filter((row) => mine.has(row.lotId)),
+        roll: canManageElection(actor)
+          ? assignments
+              .map((row) => ({ ...row, hasVoted: votedLots.has(row.lotId) }))
+              .sort((a, b) => a.lotCode.localeCompare(b.lotCode))
+          : null,
+      };
     },
 
     async seedDemoData(replace = true) {
@@ -840,6 +1357,13 @@ export function createIndexedDbRepository(
         db.auditLogs.clear(),
         db.siteConfig.clear(),
         db.files.clear(),
+        db.announcements.clear(),
+        db.feedbackItems.clear(),
+        db.hoaPlans.clear(),
+        db.elections.clear(),
+        db.electionContests.clear(),
+        db.voterAssignments.clear(),
+        db.ballots.clear(),
       ]);
     },
 
@@ -856,6 +1380,13 @@ export function createIndexedDbRepository(
         allocations: await db.allocations.toArray(),
         expenses: await db.expenses.toArray(),
         auditLogs: await db.auditLogs.toArray(),
+        announcements: await db.announcements.toArray(),
+        feedbackItems: await db.feedbackItems.toArray(),
+        hoaPlans: await db.hoaPlans.toArray(),
+        elections: await db.elections.toArray(),
+        electionContests: await db.electionContests.toArray(),
+        voterAssignments: await db.voterAssignments.toArray(),
+        ballots: await db.ballots.toArray(),
       };
       if (includeFiles) {
         bundle.files = await files.exportAll();
@@ -874,6 +1405,23 @@ export function createIndexedDbRepository(
       await db.allocations.bulkPut(bundle.allocations);
       await db.expenses.bulkPut(bundle.expenses);
       await db.auditLogs.bulkPut(bundle.auditLogs);
+      if (bundle.announcements?.length) {
+        await db.announcements.bulkPut(bundle.announcements);
+      }
+      if (bundle.feedbackItems?.length) {
+        await db.feedbackItems.bulkPut(bundle.feedbackItems);
+      }
+      if (bundle.hoaPlans?.length) {
+        await db.hoaPlans.bulkPut(bundle.hoaPlans);
+      }
+      if (bundle.elections?.length) await db.elections.bulkPut(bundle.elections);
+      if (bundle.electionContests?.length) {
+        await db.electionContests.bulkPut(bundle.electionContests);
+      }
+      if (bundle.voterAssignments?.length) {
+        await db.voterAssignments.bulkPut(bundle.voterAssignments);
+      }
+      if (bundle.ballots?.length) await db.ballots.bulkPut(bundle.ballots);
       if (bundle.files) await files.importAll(bundle.files);
       await writeAudit(db, {
         entity: "config",
