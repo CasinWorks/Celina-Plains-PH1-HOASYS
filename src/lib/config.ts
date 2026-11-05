@@ -1,6 +1,6 @@
 /** Brand and configurable placeholders — never invent subdivision facts. */
 export const HOA_NAME = "Celina Plains Phase 1 HOA";
-export const HOA_SHORT_NAME = "Celina Plains P1";
+export const HOA_SHORT_NAME = "Celina Plains PH1";
 export const CASINWORKS_URL = "https://www.casinworks.com/";
 export const CASINWORKS_NAME = "CasinWorks";
 
