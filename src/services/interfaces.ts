@@ -7,6 +7,7 @@
 import type {
   Announcement,
   DuesCharge,
+  DocumentCategory,
   ElectionStatus,
   ElectionView,
   Expense,
@@ -16,6 +17,7 @@ import type {
   FeedbackStatus,
   FeedbackType,
   FinanceAuditLog,
+  HoaDocument,
   HoaPlan,
   HoaPlanStatus,
   HomeownerFinanceSummary,
@@ -170,15 +172,27 @@ export interface HoaRepository {
   // Community — announcements
   listAnnouncements(): Promise<Announcement[]>;
   createAnnouncement(
-    input: { title: string; body: string; pinned?: boolean },
+    input: { title: string; body: string; pinned?: boolean; eventDate?: string | null },
     actor: Session,
   ): Promise<Announcement>;
   updateAnnouncement(
     id: string,
-    patch: Partial<Pick<Announcement, "title" | "body" | "pinned">>,
+    patch: Partial<Pick<Announcement, "title" | "body" | "pinned" | "eventDate">>,
     actor: Session,
   ): Promise<Announcement>;
   deleteAnnouncement(id: string, actor: Session): Promise<void>;
+
+  listDocuments(): Promise<HoaDocument[]>;
+  createDocument(
+    input: {
+      category: DocumentCategory;
+      title: string;
+      notes?: string;
+      file?: File | null;
+    },
+    actor: Session,
+  ): Promise<HoaDocument>;
+  deleteDocument(id: string, actor: Session): Promise<void>;
 
   // Community — complaints & suggestions
   listFeedback(filter?: {

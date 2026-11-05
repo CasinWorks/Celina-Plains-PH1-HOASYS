@@ -11,6 +11,7 @@ import type {
   FeedbackItem,
   FeedbackReply,
   FinanceAuditLog,
+  HoaDocument,
   HoaPlan,
   HoaPlanUpdate,
   Lot,
@@ -975,6 +976,7 @@ export function createIndexedDbRepository(
         title: input.title.trim(),
         body: input.body.trim(),
         pinned: Boolean(input.pinned),
+        eventDate: input.eventDate?.trim() || null,
         authorUserId: actor.userId,
         authorName: actor.fullName,
         publishedAt: nowIso(),
@@ -997,6 +999,10 @@ export function createIndexedDbRepository(
         ...patch,
         title: patch.title !== undefined ? patch.title.trim() : before.title,
         body: patch.body !== undefined ? patch.body.trim() : before.body,
+        eventDate:
+          patch.eventDate !== undefined
+            ? patch.eventDate?.trim() || null
+            : before.eventDate ?? null,
         updatedAt: nowIso(),
       };
       await db.announcements.put(after);
@@ -1008,6 +1014,60 @@ export function createIndexedDbRepository(
         throw new Error("Only officers or the treasurer can delete announcements.");
       }
       await db.announcements.delete(id);
+    },
+
+    async listDocuments() {
+      const rows = await db.documents.toArray();
+      const order = { house_rules: 0, deed: 1, minutes: 2 } as const;
+      return rows.sort((a, b) => {
+        const cat = order[a.category] - order[b.category];
+        if (cat !== 0) return cat;
+        return b.publishedAt.localeCompare(a.publishedAt);
+      });
+    },
+
+    async createDocument(input, actor) {
+      if (!actor.roles.includes("officer") && !actor.roles.includes("treasurer")) {
+        throw new Error("Only officers or the treasurer can post documents.");
+      }
+      const title = input.title.trim();
+      if (!title) throw new Error("Title is required.");
+      const id = createId("doc");
+      let storageKey: string | null = null;
+      let fileName: string | null = null;
+      let mimeType: string | null = null;
+      if (input.file) {
+        storageKey = `documents/${id}`;
+        fileName = input.file.name;
+        mimeType = input.file.type || "application/octet-stream";
+        await files.put(storageKey, input.file, { fileName, mimeType });
+      }
+      const row: HoaDocument = {
+        id,
+        category: input.category,
+        title,
+        notes: input.notes?.trim() ?? "",
+        fileName,
+        mimeType,
+        storageKey,
+        publishedAt: nowIso(),
+        authorUserId: actor.userId,
+        authorName: actor.fullName,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+      };
+      await db.documents.add(row);
+      return row;
+    },
+
+    async deleteDocument(id, actor) {
+      if (!actor.roles.includes("officer") && !actor.roles.includes("treasurer")) {
+        throw new Error("Only officers or the treasurer can remove documents.");
+      }
+      const row = await db.documents.get(id);
+      if (!row) return;
+      if (row.storageKey) await files.remove(row.storageKey);
+      await db.documents.delete(id);
     },
 
     async listFeedback(filter) {
@@ -1362,6 +1422,7 @@ export function createIndexedDbRepository(
         db.electionContests.clear(),
         db.voterAssignments.clear(),
         db.ballots.clear(),
+        db.documents.clear(),
       ]);
     },
 
@@ -1385,6 +1446,7 @@ export function createIndexedDbRepository(
         electionContests: await db.electionContests.toArray(),
         voterAssignments: await db.voterAssignments.toArray(),
         ballots: await db.ballots.toArray(),
+        documents: await db.documents.toArray(),
       };
       if (includeFiles) {
         bundle.files = await files.exportAll();
@@ -1420,6 +1482,7 @@ export function createIndexedDbRepository(
         await db.voterAssignments.bulkPut(bundle.voterAssignments);
       }
       if (bundle.ballots?.length) await db.ballots.bulkPut(bundle.ballots);
+      if (bundle.documents?.length) await db.documents.bulkPut(bundle.documents);
       if (bundle.files) await files.importAll(bundle.files);
       await writeAudit(db, {
         entity: "config",

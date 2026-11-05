@@ -49,6 +49,12 @@ const NAV: NavItem[] = [
     primary: true,
   },
   {
+    to: "/documents",
+    labelKey: "nav.documents",
+    icon: <IconReport />,
+    primary: true,
+  },
+  {
     to: "/officers",
     labelKey: "nav.officers",
     icon: <IconAudit />,

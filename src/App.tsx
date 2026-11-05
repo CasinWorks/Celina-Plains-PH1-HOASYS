@@ -5,6 +5,7 @@ import { AppLayout } from "./components/AppLayout";
 import { AnnouncementsPage } from "./pages/AnnouncementsPage";
 import { AuditPage } from "./pages/AuditPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { DocumentsPage } from "./pages/DocumentsPage";
 import { DuesPage } from "./pages/DuesPage";
 import { ExpensesPage } from "./pages/ExpensesPage";
 import { FeedbackPage } from "./pages/FeedbackPage";
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="expenses" element={<ExpensesPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="announcements" element={<AnnouncementsPage />} />
+            <Route path="documents" element={<DocumentsPage />} />
             <Route path="feedback" element={<FeedbackPage />} />
             <Route path="plans" element={<PlansPage />} />
             <Route path="vote" element={<VotingPage />} />

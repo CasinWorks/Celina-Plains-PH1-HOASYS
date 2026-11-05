@@ -11,8 +11,8 @@ export const DEFAULT_SITE_CONFIG = {
   penaltyGraceDays: 15,
   penaltyCompounding: false,
   paymentInstructions:
-    "[CONFIG: PAYMENT_INSTRUCTIONS] — Bank / GCash details to be set by Treasurer.",
-  hoaContact: "[CONFIG: HOA_CONTACT] — Update in Settings.",
+    "GCash: scan the QR on the welcome page. Cash: pay the treasurer in person.",
+  hoaContact: "Cash is paid to the treasurer.",
   openingCashBalance: "0.00",
 } as const;
 

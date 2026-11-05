@@ -13,6 +13,54 @@ import type {
 } from "../domain/types";
 import { getServices } from "../services/createServices";
 import { todayYmd } from "../lib/ids";
+import { nextCommunityNotice } from "../lib/notices";
+
+function MonthStrip({
+  dues,
+  notice,
+}: {
+  dues: DuesCharge[];
+  notice: Announcement | null;
+}) {
+  const { t } = useTranslation();
+  const year = new Date().getFullYear();
+  return (
+    <section className="month-strip card" aria-label={t("dashboard.yearStrip")}>
+      <div className="month-strip-row">
+        {Array.from({ length: 12 }, (_, index) => {
+          const month = index + 1;
+          const rows = dues.filter(
+            (row) => row.periodYear === year && row.periodMonth === month,
+          );
+          const status =
+            rows.length === 0
+              ? "none"
+              : rows.some((row) => row.status === "unpaid")
+                ? "unpaid"
+                : rows.some((row) => row.status === "partial")
+                  ? "partial"
+                  : "paid";
+          return (
+            <div key={month} className={`month-cell is-${status}`}>
+              <span>{t(`months.short.${month}`)}</span>
+              <span className="sr-only">
+                {status === "none" ? t("dashboard.none") : t(`status.${status}`)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="month-meeting">
+        {notice?.eventDate
+          ? t("dashboard.nextMeeting", {
+              title: notice.title,
+              date: notice.eventDate,
+            })
+          : t("dashboard.noMeeting")}
+      </p>
+    </section>
+  );
+}
 
 function daysUntil(dueDate: string): number {
   const a = new Date(`${todayYmd()}T00:00:00`);
@@ -29,6 +77,8 @@ export function DashboardPage() {
   const [summary, setSummary] = useState<HomeownerFinanceSummary | null>(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [upcoming, setUpcoming] = useState<DuesCharge[]>([]);
+  const [yearDues, setYearDues] = useState<DuesCharge[]>([]);
+  const [meeting, setMeeting] = useState<Announcement | null>(null);
   const [recentPays, setRecentPays] = useState<Payment[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [plans, setPlans] = useState<HoaPlan[]>([]);
@@ -49,6 +99,7 @@ export function DashboardPage() {
             .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
           setNextDue(open[0]?.dueDate ?? null);
           setUpcoming(open.slice(0, 4));
+          setYearDues(dues);
           const pays = await repo.listPayments({ lotId });
           setLastPay(
             pays.find((p) => p.status === "verified" && !p.isVoid) ?? null,
@@ -66,7 +117,9 @@ export function DashboardPage() {
           );
         }
         setSummary(await repo.homeownerFinanceSummary());
-        setAnnouncements((await repo.listAnnouncements()).slice(0, 3));
+        const notices = await repo.listAnnouncements();
+        setAnnouncements(notices.slice(0, 3));
+        setMeeting(nextCommunityNotice(notices));
         setPlans(
           (await repo.listHoaPlans())
             .filter((p) => p.status !== "done")
@@ -107,6 +160,8 @@ export function DashboardPage() {
       <p className="greeting-sub">
         {t("dashboard.activityLine", { count: watchCount })}
       </p>
+      <MonthStrip dues={yearDues} notice={meeting} />
+
       <span className="role-chip">
         {t("dashboard.rolesLabel")}:{" "}
         {session.roles.map((r) => t(`roles.${r}`)).join(", ")}

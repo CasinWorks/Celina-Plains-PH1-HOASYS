@@ -2651,3 +2651,154 @@ svg {
   border-radius: 2px;
   box-shadow: none;
 }
+
+.landing-steps {
+  max-width: 1080px;
+  margin: 1.75rem auto 0;
+  padding: 0 1.25rem;
+  color: var(--paper);
+}
+
+.landing-steps h2,
+.landing-steps ol,
+.landing-next {
+  margin: 0;
+}
+
+.landing-steps h2 {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 500;
+  color: var(--paper);
+}
+
+.landing-steps ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.landing-steps li {
+  min-height: 48px;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  counter-increment: step;
+}
+
+.landing-steps li::before {
+  content: counter(step) ". ";
+  color: var(--gold-soft);
+}
+
+.landing-next {
+  margin-top: 1rem;
+  font-size: 1.05rem;
+  color: var(--gold-soft);
+}
+
+.landing-sheet .pay-options h2,
+.landing-sheet .pay-options h3,
+.landing-sheet .pay-options p {
+  color: var(--text);
+}
+
+.pay-options h2 {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin: 0 0 0.85rem;
+}
+
+.pay-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.pay-options article {
+  min-height: 48px;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.pay-options h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+}
+
+.pay-options p {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.pay-qr {
+  display: block;
+  width: min(220px, 100%);
+  margin-top: 0.85rem;
+  background: white;
+}
+
+.landing-contact {
+  margin: 1rem 0 0;
+  font-size: 1.05rem;
+}
+
+.waiting-count {
+  margin: 0.25rem 0 1rem;
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+}
+
+.month-strip-row {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(3.4rem, 1fr));
+  gap: 0.35rem;
+  overflow-x: auto;
+}
+
+.month-cell {
+  min-height: 48px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.45rem 0.15rem;
+  border: 1px solid var(--line);
+  font-size: 1rem;
+}
+
+.month-cell.is-paid {
+  background: #e7efe4;
+}
+
+.month-cell.is-partial {
+  background: var(--gold-soft);
+}
+
+.month-cell.is-unpaid {
+  background: #f6e4dc;
+}
+
+.month-cell.is-none {
+  color: #8a847a;
+}
+
+.month-meeting {
+  margin: 0.85rem 0 0;
+  font-size: 1.05rem;
+}
+
+.doc-shelf {
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 720px) {
+  .landing-steps ol,
+  .pay-options-grid {
+    grid-template-columns: 1fr;
+  }
+}

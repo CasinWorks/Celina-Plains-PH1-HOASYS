@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
+import { PayOptions } from "../components/PayOptions";
 import { StatusBadge } from "../components/StatusBadge";
 import { formatPeso } from "../domain/money";
 import type { Lot, Payment, PaymentMethod, SiteConfig } from "../domain/types";
@@ -174,12 +175,20 @@ export function PaymentsPage() {
         </div>
       )}
 
-      {cfg && (
-        <div className="alert alert-info">
-          <strong>{t("payments.instructions")}</strong>
-          <div>{cfg.paymentInstructions}</div>
-        </div>
+      <PayOptions />
+      {isTreasurer && (
+        <p className="waiting-count" role="status">
+          {t("payments.waitingCount", { count: pending.length })}
+        </p>
       )}
+      {cfg &&
+        cfg.paymentInstructions &&
+        !cfg.paymentInstructions.includes("[CONFIG:") && (
+          <div className="alert alert-info">
+            <strong>{t("payments.instructions")}</strong>
+            <div>{cfg.paymentInstructions}</div>
+          </div>
+        )}
 
       <div className="card" id="payment-form">
         <h2 className="card-title">{t("payments.submit")}</h2>

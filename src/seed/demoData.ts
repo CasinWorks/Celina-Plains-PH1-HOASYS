@@ -52,9 +52,9 @@ function siteConfig(): SiteConfig {
   return {
     id: "site",
     ...DEFAULT_SITE_CONFIG,
-    hoaContact: "[CONFIG: HOA_CONTACT] Demo — Celina Plains Phase 1, Philippines",
+    hoaContact: "Cash is paid to the treasurer.",
     paymentInstructions:
-      "[CONFIG: PAYMENT_INSTRUCTIONS] Demo GCash: 09XX XXX XXXX (Treasurer) · Demo Bank: BPI ****1234",
+      "GCash: scan the QR on the welcome page. Cash: pay the treasurer in person.",
     openingCashBalance: "25000.00",
     updatedAt: nowIso(),
   };
@@ -375,6 +375,7 @@ function announcements(): Announcement[] {
       title: "DEMO — General assembly this Saturday",
       body: "Join us at the clubhouse, 9:00 AM. Bring your lot ID for attendance.",
       pinned: true,
+      eventDate: "2026-11-07",
       authorUserId: IDS.officer,
       authorName: DEMO_USERS.officer.fullName,
       publishedAt: ts,

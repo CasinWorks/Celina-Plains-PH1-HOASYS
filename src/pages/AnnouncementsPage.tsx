@@ -11,6 +11,7 @@ export function AnnouncementsPage() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [pinned, setPinned] = useState(false);
+  const [eventDate, setEventDate] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const canPost = hasRole("officer") || hasRole("treasurer");
@@ -29,12 +30,13 @@ export function AnnouncementsPage() {
     setError("");
     try {
       await getServices().repo.createAnnouncement(
-        { title, body, pinned },
+        { title, body, pinned, eventDate: eventDate || null },
         session,
       );
       setTitle("");
       setBody("");
       setPinned(false);
+      setEventDate("");
       setMessage(t("announcements.posted"));
       await load();
     } catch (err) {
@@ -91,6 +93,16 @@ export function AnnouncementsPage() {
                 required
               />
             </div>
+            <div className="form-field">
+              <label htmlFor="ann-date">{t("announcements.eventDate")}</label>
+              <input
+                id="ann-date"
+                type="date"
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+              />
+              <span className="hint">{t("announcements.eventDateHint")}</span>
+            </div>
             <label className="check-row">
               <input
                 type="checkbox"
@@ -130,6 +142,7 @@ export function AnnouncementsPage() {
               <p style={{ whiteSpace: "pre-wrap" }}>{a.body}</p>
               <p className="meta-line">
                 {a.authorName} · {new Date(a.publishedAt).toLocaleString()}
+                {a.eventDate ? ` · ${a.eventDate}` : ""}
               </p>
               {canPost && (
                 <button

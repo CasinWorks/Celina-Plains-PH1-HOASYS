@@ -1,8 +1,13 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
 import { LanguageSwitch } from "../components/LanguageSwitch";
+import { PayOptions } from "../components/PayOptions";
 import { PoweredByCasinWorks } from "../components/PoweredByCasinWorks";
+import type { Announcement } from "../domain/types";
+import { nextCommunityNotice } from "../lib/notices";
+import { getServices } from "../services/createServices";
 
 const SCENES = [
   {
@@ -25,9 +30,36 @@ const SCENES = [
   },
 ] as const;
 
+function formatGathering(date: string): string {
+  const parsed = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return date;
+  return parsed.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 export function LandingPage() {
   const { t } = useTranslation();
   const { session } = useAuth();
+  const [notice, setNotice] = useState<Announcement | null>(null);
+  const [contact, setContact] = useState("");
+
+  useEffect(() => {
+    const repo = getServices().repo;
+    void repo
+      .listAnnouncements()
+      .then((rows) => setNotice(nextCommunityNotice(rows)))
+      .catch(() => setNotice(null));
+    void repo
+      .getSiteConfig()
+      .then((cfg) => {
+        const line = cfg.hoaContact.trim();
+        setContact(line.includes("[CONFIG:") ? "" : line);
+      })
+      .catch(() => setContact(""));
+  }, []);
 
   return (
     <div className="landing">
@@ -64,8 +96,6 @@ export function LandingPage() {
         </div>
       </section>
 
-      <p className="landing-note">{t("landing.sampleNote")}</p>
-
       <section className="landing-gallery" aria-label={t("landing.gallery")}>
         {SCENES.map((scene) => (
           <figure
@@ -78,23 +108,27 @@ export function LandingPage() {
         ))}
       </section>
 
+      <section className="landing-steps" aria-label={t("landing.stepsTitle")}>
+        <h2>{t("landing.stepsTitle")}</h2>
+        <ol>
+          <li>{t("landing.stepSignIn")}</li>
+          <li>{t("landing.stepDue")}</li>
+          <li>{t("landing.stepProof")}</li>
+        </ol>
+        {notice?.eventDate && (
+          <p className="landing-next">
+            {t("landing.nextGathering", {
+              title: notice.title,
+              date: formatGathering(notice.eventDate),
+            })}
+          </p>
+        )}
+      </section>
+
       <section className="landing-sheet">
         <div className="landing-sheet-inner">
-          <h2>{t("landing.portalTitle")}</h2>
-          <ul className="landing-points">
-            <li>
-              <strong>{t("landing.dues")}</strong>
-              <p>{t("landing.duesBody")}</p>
-            </li>
-            <li>
-              <strong>{t("landing.pay")}</strong>
-              <p>{t("landing.payBody")}</p>
-            </li>
-            <li>
-              <strong>{t("landing.vote")}</strong>
-              <p>{t("landing.voteBody")}</p>
-            </li>
-          </ul>
+          <PayOptions />
+          {contact && <p className="landing-contact">{contact}</p>}
         </div>
       </section>
 

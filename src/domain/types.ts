@@ -30,9 +30,28 @@ export interface Announcement {
   title: string;
   body: string;
   pinned: boolean;
+  /** Community date, YYYY-MM-DD, when the notice is for a gathering. */
+  eventDate?: string | null;
   authorUserId: string;
   authorName: string;
   publishedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type DocumentCategory = "house_rules" | "deed" | "minutes";
+
+export interface HoaDocument {
+  id: string;
+  category: DocumentCategory;
+  title: string;
+  notes: string;
+  fileName: string | null;
+  mimeType: string | null;
+  storageKey: string | null;
+  publishedAt: string;
+  authorUserId: string;
+  authorName: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -353,6 +372,7 @@ export interface ExportBundle {
   electionContests?: ElectionContest[];
   voterAssignments?: VoterAssignment[];
   ballots?: Ballot[];
+  documents?: HoaDocument[];
   /** Base64 proof/receipt blobs keyed by storage key — optional for lighter backups. */
   files?: Record<string, { mimeType: string; fileName: string; base64: string }>;
 }
