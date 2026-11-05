@@ -46,44 +46,53 @@ describe("IndexedDB repository (Phase 1 money flows)", () => {
     await db.delete();
   });
 
-  it("registers a homeowner on a new lot and lets them sign in", async () => {
+  it("holds a homeowner application until an officer verifies it", async () => {
     await auth.logout();
-    const session = await auth.register({
+    await auth.applyForHomeowner({
       fullName: "Ana Reyes",
       username: "Ana.Reyes",
       password: "house1234",
       mobile: "09170000000",
       lotCode: "b3-l12",
     });
-    expect(session.roles).toEqual(["homeowner"]);
-    expect(session.username).toBe("ana.reyes");
-    expect(session.consentPrivacyAt).toBeTruthy();
+    const pending = (await repo.listUsers()).find((row) => row.username === "ana.reyes");
+    expect(pending?.approvalStatus).toBe("pending");
+    expect(pending?.isActive).toBe(false);
+    expect(pending?.lotIds).toEqual([]);
+    expect((await repo.listLots()).some((row) => row.lotCode === "B3-L12")).toBe(false);
+    await expect(auth.login("ana.reyes", "house1234")).rejects.toThrow(/verify/i);
+    const officer = await auth.login(DEMO_USERS.officer.username, DEMO_PASSWORD);
+    const approved = await repo.approveHomeownerApplication(pending!.id, officer);
+    expect(approved.approvalStatus).toBe("approved");
     const lot = (await repo.listLots()).find((row) => row.lotCode === "B3-L12");
     expect(lot?.householdName).toBe("Ana Reyes");
-    expect(lot?.block).toBe("3");
-    expect(lot?.street).toBe("");
-    expect(lot?.residentUserIds).toContain(session.userId);
+    expect(lot?.residentUserIds).toContain(approved.id);
     await auth.logout();
-    const again = await auth.login("ana.reyes", "house1234");
-    expect(again.userId).toBe(session.userId);
+    const session = await auth.login("ana.reyes", "house1234");
+    expect(session.userId).toBe(approved.id);
+    expect(session.lotIds).toEqual([lot!.id]);
   });
 
-  it("links a new homeowner to an existing lot", async () => {
+  it("links a verified application to an existing lot", async () => {
     await auth.logout();
     const before = (await repo.listLots()).find((row) => row.lotCode === "B1-L02")!;
-    const session = await auth.register({
+    await auth.applyForHomeowner({
       fullName: "New Resident",
       username: "new.resident",
       password: "house1234",
       mobile: "",
       lotCode: "b1-l02",
     });
+    expect((await repo.getLot(before.id))?.residentUserIds).toEqual(before.residentUserIds);
+    const pending = (await repo.listUsers()).find((row) => row.username === "new.resident")!;
+    const officer = await auth.login(DEMO_USERS.officer.username, DEMO_PASSWORD);
+    const approved = await repo.approveHomeownerApplication(pending.id, officer);
     const after = await repo.getLot(before.id);
     expect(after?.householdName).toBe(before.householdName);
-    expect(after?.residentUserIds).toContain(session.userId);
-    expect(session.lotIds).toEqual([before.id]);
+    expect(after?.residentUserIds).toContain(approved.id);
+    expect(approved.lotIds).toEqual([before.id]);
     await expect(
-      auth.register({
+      auth.applyForHomeowner({
         fullName: "Other Person",
         username: "new.resident",
         password: "house1234",
@@ -91,6 +100,38 @@ describe("IndexedDB repository (Phase 1 money flows)", () => {
         lotCode: "B9-L01",
       }),
     ).rejects.toThrow(/already registered/i);
+    await expect(
+      repo.approveHomeownerApplication(pending.id, homeowner),
+    ).rejects.toThrow(/officer/i);
+  });
+
+  it("lets an officer add a homeowner without taking over the session", async () => {
+    const officer = await auth.login(DEMO_USERS.officer.username, DEMO_PASSWORD);
+    const added = await auth.provisionHomeowner(
+      {
+        fullName: "Lot Neighbor",
+        username: "lot.neighbor",
+        password: "house1234",
+        mobile: "",
+        lotCode: "B2-L05",
+      },
+      officer,
+    );
+    expect(added.roles).toEqual(["homeowner"]);
+    const still = await auth.getSession();
+    expect(still?.username).toBe(DEMO_USERS.officer.username);
+    await expect(
+      auth.provisionHomeowner(
+        {
+          fullName: "Blocked",
+          username: "blocked.person",
+          password: "house1234",
+          mobile: "",
+          lotCode: "B2-L05",
+        },
+        homeowner,
+      ),
+    ).rejects.toThrow(/officer/i);
   });
 
   it("seeds demo users for each role and sample lots/dues", async () => {

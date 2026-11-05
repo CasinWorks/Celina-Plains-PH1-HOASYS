@@ -15,7 +15,7 @@ type AuthState = {
   session: Session | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  register: (input: RegisterHomeownerInput) => Promise<void>;
+  apply: (input: RegisterHomeownerInput) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   acceptPrivacy: () => Promise<void>;
@@ -52,9 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const s = await services.auth.login(username, password);
         setSession(s);
       },
-      async register(input) {
-        const s = await services.auth.register(input);
-        setSession(s);
+      async apply(input) {
+        await services.auth.applyForHomeowner(input);
       },
       async logout() {
         await services.auth.logout();

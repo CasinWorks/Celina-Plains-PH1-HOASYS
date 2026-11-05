@@ -34,6 +34,10 @@ import { createId, nowIso, todayYmd } from "../../lib/ids";
 import type { FileStorageService, HoaRepository } from "../../services/interfaces";
 import { getDb, type HoaDatabase } from "./db";
 import { seedDemoBundle } from "../../seed/demoData";
+import {
+  approveHomeownerRecord,
+  rejectHomeownerRecord,
+} from "../registerHomeowner";
 
 const CONFIG_ID = "site";
 
@@ -213,6 +217,14 @@ export function createIndexedDbRepository(
         note: "",
       });
       return after;
+    },
+
+    async approveHomeownerApplication(userId, actor) {
+      return approveHomeownerRecord(db, userId, actor);
+    },
+
+    async rejectHomeownerApplication(userId, actor) {
+      await rejectHomeownerRecord(db, userId, actor);
     },
 
     async linkUserToLot(userId, lotId, actor) {

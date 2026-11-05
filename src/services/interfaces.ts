@@ -43,7 +43,12 @@ export interface RegisterHomeownerInput {
 
 export interface AuthService {
   login(username: string, password: string): Promise<Session>;
-  register(input: RegisterHomeownerInput): Promise<Session>;
+  applyForHomeowner(input: RegisterHomeownerInput): Promise<void>;
+  /** Officer or treasurer adds a homeowner without signing themselves out. */
+  provisionHomeowner(
+    input: RegisterHomeownerInput,
+    actor: Session,
+  ): Promise<UserAccount>;
   logout(): Promise<void>;
   getSession(): Promise<Session | null>;
   changePassword(userId: string, current: string, next: string): Promise<void>;
@@ -91,6 +96,8 @@ export interface HoaRepository {
     actor: Session,
   ): Promise<Lot>;
   linkUserToLot(userId: string, lotId: string, actor: Session): Promise<void>;
+  approveHomeownerApplication(userId: string, actor: Session): Promise<UserAccount>;
+  rejectHomeownerApplication(userId: string, actor: Session): Promise<void>;
 
   // Dues
   listDues(filter?: { lotId?: string }): Promise<DuesCharge[]>;

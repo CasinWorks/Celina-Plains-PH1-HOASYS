@@ -115,6 +115,10 @@ export interface UserAccount {
   roles: Role[];
   lotIds: string[];
   isActive: boolean;
+  /** Missing on older accounts, which are already verified. */
+  approvalStatus?: "pending" | "approved" | "rejected";
+  /** Lot code requested on an application, used when an officer verifies it. */
+  requestedLotCode?: string;
   consentPrivacyAt: string | null;
   createdAt: string;
   updatedAt: string;

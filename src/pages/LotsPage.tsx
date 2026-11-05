@@ -3,13 +3,14 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../auth/AuthContext";
 import { RequireRole } from "../auth/RequireAuth";
 import { LotDetailDrawer } from "../components/LotDetailDrawer";
-import type { Lot } from "../domain/types";
+import type { Lot, UserAccount } from "../domain/types";
 import { getServices } from "../services/createServices";
 
 function LotsInner() {
   const { t } = useTranslation();
   const { session, hasRole } = useAuth();
   const [lots, setLots] = useState<Lot[]>([]);
+  const [applications, setApplications] = useState<UserAccount[]>([]);
   const [selected, setSelected] = useState<Lot | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -20,9 +21,20 @@ function LotsInner() {
   const [street, setStreet] = useState("");
   const [householdName, setHouseholdName] = useState("");
   const [notes, setNotes] = useState("");
+  const [residentName, setResidentName] = useState("");
+  const [residentUser, setResidentUser] = useState("");
+  const [residentPassword, setResidentPassword] = useState("");
+  const [residentMobile, setResidentMobile] = useState("");
+  const [residentLot, setResidentLot] = useState("");
 
   async function load() {
-    setLots(await getServices().repo.listLots());
+    const repo = getServices().repo;
+    const [lotRows, users] = await Promise.all([
+      repo.listLots(),
+      repo.listUsers(),
+    ]);
+    setLots(lotRows);
+    setApplications(users.filter((user) => user.approvalStatus === "pending"));
   }
 
   useEffect(() => {
@@ -58,6 +70,72 @@ function LotsInner() {
     }
   }
 
+  async function verifyApplication(userId: string) {
+    if (!session) return;
+    setError("");
+    setMessage("");
+    try {
+      const approved = await getServices().repo.approveHomeownerApplication(
+        userId,
+        session,
+      );
+      setMessage(t("lots.verified", { name: approved.fullName }));
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.error"));
+    }
+  }
+
+  async function declineApplication(userId: string) {
+    if (!session) return;
+    setError("");
+    setMessage("");
+    try {
+      await getServices().repo.rejectHomeownerApplication(userId, session);
+      setMessage(t("lots.declined"));
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.error"));
+    }
+  }
+
+  async function addResident(e: FormEvent) {
+    e.preventDefault();
+    if (!session) return;
+    setError("");
+    setMessage("");
+    if (residentPassword.length < 8) {
+      setError(t("register.passwordShort"));
+      return;
+    }
+    try {
+      await getServices().auth.provisionHomeowner(
+        {
+          fullName: residentName,
+          username: residentUser,
+          password: residentPassword,
+          mobile: residentMobile,
+          lotCode: residentLot,
+        },
+        session,
+      );
+      setMessage(
+        t("lots.residentAdded", {
+          name: residentName.trim(),
+          username: residentUser.trim().toLowerCase(),
+        }),
+      );
+      setResidentName("");
+      setResidentUser("");
+      setResidentPassword("");
+      setResidentMobile("");
+      setResidentLot("");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("common.error"));
+    }
+  }
+
   return (
     <div className="page-animate">
       <h1 className="page-title">{t("lots.title")}</h1>
@@ -72,6 +150,106 @@ function LotsInner() {
           {error}
         </div>
       )}
+
+      <div className="card pop-in">
+        <h2 className="card-title">{t("lots.applications")}</h2>
+        <p className="hint">{t("lots.applicationsLead")}</p>
+        {applications.length === 0 ? (
+          <p>{t("lots.noApplications")}</p>
+        ) : (
+          <div className="list-stack">
+            {applications.map((person) => (
+              <div
+                className="list-row"
+                key={person.id}
+                style={{ gridTemplateColumns: "1fr auto" }}
+              >
+                <div style={{ textAlign: "left" }}>
+                  <strong>
+                    {person.fullName} — {person.requestedLotCode}
+                  </strong>
+                  <div className="meta-line">{person.username}</div>
+                </div>
+                <div className="btn-row">
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => void verifyApplication(person.id)}
+                  >
+                    {t("lots.verify")}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => void declineApplication(person.id)}
+                  >
+                    {t("lots.decline")}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="card pop-in">
+        <h2 className="card-title">{t("lots.addResident")}</h2>
+        <p className="hint">{t("lots.addResidentLead")}</p>
+        <form onSubmit={addResident}>
+          <div className="form-field">
+            <label htmlFor="resident-name">{t("lots.fullName")}</label>
+            <input
+              id="resident-name"
+              value={residentName}
+              onChange={(e) => setResidentName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="resident-lot">{t("lots.lotCode")}</label>
+            <input
+              id="resident-lot"
+              value={residentLot}
+              onChange={(e) => setResidentLot(e.target.value)}
+              required
+            />
+            <span className="hint">{t("register.lotHint")}</span>
+          </div>
+          <div className="form-field">
+            <label htmlFor="resident-mobile">{t("lots.mobile")}</label>
+            <input
+              id="resident-mobile"
+              type="tel"
+              value={residentMobile}
+              onChange={(e) => setResidentMobile(e.target.value)}
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="resident-user">{t("lots.username")}</label>
+            <input
+              id="resident-user"
+              autoComplete="off"
+              value={residentUser}
+              onChange={(e) => setResidentUser(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-field">
+            <label htmlFor="resident-password">{t("lots.password")}</label>
+            <input
+              id="resident-password"
+              type="password"
+              autoComplete="new-password"
+              value={residentPassword}
+              onChange={(e) => setResidentPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button className="btn btn-primary" type="submit">
+            {t("lots.addResident")}
+          </button>
+        </form>
+      </div>
 
       {canManage && (
         <div className="card pop-in">

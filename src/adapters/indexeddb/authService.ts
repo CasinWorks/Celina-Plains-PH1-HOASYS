@@ -1,4 +1,9 @@
-import { createHomeownerAccount } from "../registerHomeowner";
+import {
+  createHomeownerAccount,
+  createHomeownerApplication,
+  PENDING_APPLICATION,
+  REJECTED_APPLICATION,
+} from "../registerHomeowner";
 import type { Role, Session, UserAccount } from "../../domain/types";
 import { nowIso } from "../../lib/ids";
 import type { AuthService } from "../../services/interfaces";
@@ -27,19 +32,32 @@ export function createIndexedDbAuthService(
         .where("username")
         .equals(username.trim().toLowerCase())
         .first();
-      if (!user || !user.isActive || user.password !== password) {
+      if (!user || user.password !== password) {
         throw new Error("Invalid username or password.");
       }
+      if (user.approvalStatus === "pending") throw new Error(PENDING_APPLICATION);
+      if (user.approvalStatus === "rejected") throw new Error(REJECTED_APPLICATION);
+      if (!user.isActive) throw new Error("Invalid username or password.");
       const session = toSession(user);
       localStorage.setItem(SESSION_KEY, JSON.stringify(session));
       return session;
     },
 
-    async register(input) {
-      const user = await createHomeownerAccount(db, input);
-      const session = toSession(user);
-      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-      return session;
+    async applyForHomeowner(input) {
+      await createHomeownerApplication(db, input);
+    },
+
+    async provisionHomeowner(input, actor) {
+      if (
+        !actor.roles.includes("officer") &&
+        !actor.roles.includes("treasurer")
+      ) {
+        throw new Error("Only an officer or the treasurer can add a homeowner.");
+      }
+      return createHomeownerAccount(db, {
+        ...input,
+        actor: { userId: actor.userId, fullName: actor.fullName },
+      });
     },
 
     async logout() {

@@ -10,7 +10,7 @@ import { applyTextSize, getStoredTextSize } from "../lib/textSize";
 
 export function RegisterPage() {
   const { t } = useTranslation();
-  const { register, session } = useAuth();
+  const { apply, session } = useAuth();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
@@ -20,6 +20,7 @@ export function RegisterPage() {
   const [lotCode, setLotCode] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
+  const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -47,14 +48,21 @@ export function RegisterPage() {
     }
     setBusy(true);
     try {
-      await register({
+      await apply({
         fullName,
         username,
         password,
         mobile,
         lotCode,
       });
-      navigate("/", { replace: true });
+      setSent(true);
+      setFullName("");
+      setUsername("");
+      setPassword("");
+      setConfirm("");
+      setMobile("");
+      setLotCode("");
+      setAgreed(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("common.error"));
     } finally {
@@ -80,6 +88,11 @@ export function RegisterPage() {
         <p className="login-eyebrow">{t("app.shortName")}</p>
         <h1 className="page-title">{t("register.title")}</h1>
         <p className="page-lead">{t("register.lead")}</p>
+        {sent && (
+          <div className="alert alert-success" role="status">
+            {t("register.sent")}
+          </div>
+        )}
         {error && (
           <div className="alert alert-danger" role="alert">
             {error}

@@ -10,10 +10,16 @@ import {
 import type { Session, UserAccount } from "../../domain/types";
 import { nowIso } from "../../lib/ids";
 import type { AuthService } from "../../services/interfaces";
-import { createHomeownerAccount, normalizeUsername } from "../registerHomeowner";
+import {
+  createHomeownerAccount,
+  createHomeownerApplication,
+  normalizeUsername,
+  PENDING_APPLICATION,
+  REJECTED_APPLICATION,
+} from "../registerHomeowner";
 import { SESSION_KEY } from "../indexeddb/authService";
 import type { HoaDatabase } from "../indexeddb/db";
-import { getFirebaseAuth } from "./app";
+import { getFirebaseAuth, getSeedAuth } from "./app";
 import { explainFirebaseError } from "./errors";
 import { usernameFromEmail, usernameToEmail } from "./payload";
 import type { CloudSync } from "./sync";
@@ -66,6 +72,14 @@ export function createFirebaseAuthService(
           password,
         );
         await sync.beginLiveSession();
+        const signedInName = usernameFromEmail(getFirebaseAuth().currentUser?.email);
+        const row = (await db.users.toArray()).find(
+          (user) =>
+            user.firebaseUid === getFirebaseAuth().currentUser?.uid ||
+            user.username === signedInName,
+        );
+        if (row?.approvalStatus === "pending") throw new Error(PENDING_APPLICATION);
+        if (row?.approvalStatus === "rejected") throw new Error(REJECTED_APPLICATION);
         const session = await sessionForCurrentUser(db);
         if (!session) throw new Error("Invalid username or password.");
         return session;
@@ -78,36 +92,91 @@ export function createFirebaseAuthService(
       }
     },
 
-    async register(input) {
+    async applyForHomeowner(input) {
       const username = normalizeUsername(input.username);
       if (input.password.length < 8) {
         throw new Error("Password must be at least 8 characters.");
       }
       const existing = await db.users.where("username").equals(username).first();
       if (existing) throw new Error("That username is already registered.");
-      let uid = "";
+      const seed = getSeedAuth();
+      const auth = getFirebaseAuth();
+      const hadUser = auth.currentUser;
       try {
         const created = await createUserWithEmailAndPassword(
-          getFirebaseAuth(),
+          seed,
           usernameToEmail(username),
           input.password,
         );
-        uid = created.user.uid;
-        sync.registerUids(new Map([[username, uid]]));
-        await sync.beginLiveSession();
+        await signOut(seed);
+        if (!hadUser) {
+          await signInWithEmailAndPassword(
+            auth,
+            usernameToEmail(username),
+            input.password,
+          );
+          await sync.beginLiveSession();
+        }
+        sync.registerUids(new Map([[username, created.user.uid]]));
         const again = await db.users.where("username").equals(username).first();
         if (again) throw new Error("That username is already registered.");
+        await createHomeownerApplication(db, {
+          ...input,
+          username,
+          firebaseUid: created.user.uid,
+        });
+        await sync.flush();
+      } catch (error) {
+        const code =
+          typeof error === "object" && error && "code" in error
+            ? String((error as { code: string }).code)
+            : "";
+        if (code === "auth/email-already-in-use") {
+          throw new Error("That username is already registered.");
+        }
+        if (error instanceof Error && !("code" in error)) throw error;
+        throw explainFirebaseError(error);
+      } finally {
+        await signOut(seed).catch(() => undefined);
+        if (!hadUser && auth.currentUser) {
+          await sync.endLiveSession().catch(() => undefined);
+          await signOut(auth).catch(() => undefined);
+        }
+      }
+    },
+
+    async provisionHomeowner(input, actor) {
+      if (
+        !actor.roles.includes("officer") &&
+        !actor.roles.includes("treasurer")
+      ) {
+        throw new Error("Only an officer or the treasurer can add a homeowner.");
+      }
+      const username = normalizeUsername(input.username);
+      if (input.password.length < 8) {
+        throw new Error("Password must be at least 8 characters.");
+      }
+      const existing = await db.users.where("username").equals(username).first();
+      if (existing) throw new Error("That username is already registered.");
+      const seed = getSeedAuth();
+      try {
+        const created = await createUserWithEmailAndPassword(
+          seed,
+          usernameToEmail(username),
+          input.password,
+        );
+        await signOut(seed);
+        sync.registerUids(new Map([[username, created.user.uid]]));
         const user = await createHomeownerAccount(db, {
           ...input,
           username,
-          firebaseUid: uid,
+          firebaseUid: created.user.uid,
+          actor: { userId: actor.userId, fullName: actor.fullName },
         });
         await sync.flush();
-        return toSession(user);
+        return user;
       } catch (error) {
-        if (getFirebaseAuth().currentUser) {
-          await signOut(getFirebaseAuth()).catch(() => undefined);
-        }
+        await signOut(seed).catch(() => undefined);
         const code =
           typeof error === "object" && error && "code" in error
             ? String((error as { code: string }).code)
