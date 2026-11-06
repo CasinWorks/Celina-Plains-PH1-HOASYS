@@ -25,6 +25,24 @@ export type FeedbackType = "complaint" | "suggestion";
 export type FeedbackStatus = "open" | "in_progress" | "resolved" | "closed";
 export type HoaPlanStatus = "planned" | "in_progress" | "done";
 
+export interface AnnouncementPhoto {
+  id: string;
+  mimeType: string;
+  /** Compressed image, small enough to travel with the notice. */
+  dataUrl: string;
+}
+
+export interface EventAttendance {
+  id: string;
+  eventId: string;
+  lotId: string;
+  lotCode: string;
+  householdName: string;
+  markedByUserId: string;
+  markedByName: string;
+  markedAt: string;
+}
+
 export interface Announcement {
   id: string;
   title: string;
@@ -32,6 +50,7 @@ export interface Announcement {
   pinned: boolean;
   /** Community date, YYYY-MM-DD, when the notice is for a gathering. */
   eventDate?: string | null;
+  photos?: AnnouncementPhoto[];
   authorUserId: string;
   authorName: string;
   publishedAt: string;
@@ -377,6 +396,7 @@ export interface ExportBundle {
   voterAssignments?: VoterAssignment[];
   ballots?: Ballot[];
   documents?: HoaDocument[];
+  attendances?: EventAttendance[];
   /** Base64 proof/receipt blobs keyed by storage key — optional for lighter backups. */
   files?: Record<string, { mimeType: string; fileName: string; base64: string }>;
 }

@@ -6,6 +6,8 @@
 
 import type {
   Announcement,
+  AnnouncementPhoto,
+  EventAttendance,
   DuesCharge,
   DocumentCategory,
   ElectionStatus,
@@ -193,7 +195,13 @@ export interface HoaRepository {
   // Community — announcements
   listAnnouncements(): Promise<Announcement[]>;
   createAnnouncement(
-    input: { title: string; body: string; pinned?: boolean; eventDate?: string | null },
+    input: {
+      title: string;
+      body: string;
+      pinned?: boolean;
+      eventDate?: string | null;
+      photos?: AnnouncementPhoto[];
+    },
     actor: Session,
   ): Promise<Announcement>;
   updateAnnouncement(
@@ -202,6 +210,18 @@ export interface HoaRepository {
     actor: Session,
   ): Promise<Announcement>;
   deleteAnnouncement(id: string, actor: Session): Promise<void>;
+  addEventPhotos(
+    id: string,
+    input: { photos: AnnouncementPhoto[]; note?: string },
+    actor: Session,
+  ): Promise<Announcement>;
+  listEventAttendance(eventId: string): Promise<EventAttendance[]>;
+  setEventPresent(
+    eventId: string,
+    lotId: string,
+    present: boolean,
+    actor: Session,
+  ): Promise<EventAttendance | null>;
 
   listDocuments(): Promise<HoaDocument[]>;
   createDocument(

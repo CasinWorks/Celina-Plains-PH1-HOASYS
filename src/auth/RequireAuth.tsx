@@ -66,4 +66,5 @@ export const ROUTE_POLICY = {
   audit: ["treasurer"] as Role[],
   verifyPayment: ["treasurer"] as Role[],
   access: ["admin"] as Role[],
+  attendance: ["officer", "treasurer", "admin"] as Role[],
 } as const;

@@ -28,6 +28,7 @@ const TABLE_NAMES = [
   "voterAssignments",
   "ballots",
   "documents",
+  "attendances",
 ] as const;
 
 type TableName = (typeof TABLE_NAMES)[number];

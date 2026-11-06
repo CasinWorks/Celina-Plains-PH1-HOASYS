@@ -122,11 +122,8 @@ export function ReportsPage() {
           {!hasRole("treasurer") && (
             <p className="alert alert-info">{t("reports.detailedNote")}</p>
           )}
-          <div
-            className="btn-row"
-            style={{ alignItems: "end", marginBottom: "1rem" }}
-          >
-            <div className="form-field" style={{ marginBottom: 0 }}>
+          <div className="statement-filters">
+            <div className="form-field">
               <label htmlFor="y">{t("common.year")}</label>
               <input
                 id="y"
@@ -135,7 +132,7 @@ export function ReportsPage() {
                 onChange={(e) => setYear(Number(e.target.value))}
               />
             </div>
-            <div className="form-field" style={{ marginBottom: 0 }}>
+            <div className="form-field">
               <label htmlFor="m">{t("common.month")}</label>
               <select
                 id="m"

@@ -3,6 +3,7 @@ import { AuthProvider } from "./auth/AuthContext";
 import { RequireAuth } from "./auth/RequireAuth";
 import { AppLayout } from "./components/AppLayout";
 import { AccessPage } from "./pages/AccessPage";
+import { AttendancePage } from "./pages/AttendancePage";
 import { AnnouncementsPage } from "./pages/AnnouncementsPage";
 import { AuditPage } from "./pages/AuditPage";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -53,6 +54,8 @@ export default function App() {
             <Route path="dues" element={<DuesPage />} />
             <Route path="payments" element={<PaymentsPage />} />
             <Route path="lots" element={<LotsPage />} />
+            <Route path="attendance" element={<AttendancePage />} />
+            <Route path="attendance/:eventId" element={<AttendancePage />} />
             <Route path="expenses" element={<ExpensesPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="announcements" element={<AnnouncementsPage />} />

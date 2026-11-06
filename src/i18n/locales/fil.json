@@ -44,7 +44,8 @@
     "plans": "Mga plano ng HOA",
     "officers": "Mga kandidato 2026",
     "voting": "Pagboto",
-    "access": "Access"
+    "access": "Access",
+    "attendance": "Attendance"
   },
   "roles": {
     "homeowner": "Homeowner",
@@ -269,7 +270,7 @@
   },
   "announcements": {
     "title": "Mga anunsyo",
-    "lead": "Mga notice mula sa officers at treasurer.",
+    "lead": "Mga abiso, larawan, at kalendaryo ng komunidad. I-tap ang araw para makita ang pagtitipon at ang susunod.",
     "create": "Mag-post ng anunsyo",
     "fieldTitle": "Pamagat",
     "fieldBody": "Mensahe",
@@ -281,7 +282,52 @@
     "deleteConfirm": "Tanggalin ang anunsyo na ito?",
     "empty": "Wala pang anunsyo.",
     "eventDate": "Petsa ng pagtitipon",
-    "eventDateHint": "Iwanang blangko kung hindi para sa isang petsa ang abiso."
+    "eventDateHint": "Iwanang blangko kung hindi para sa isang petsa. Ang petsa ang maglalagay nito sa kalendaryo.",
+    "feed": "Feed ng komunidad",
+    "calendar": "Kalendaryo ng mga event",
+    "upcoming": "Susunod na event",
+    "happened": "Ang nangyari sa araw na iyon",
+    "todayEvent": "Ngayon",
+    "noEvent": "Walang pagtitipon sa araw na ito.",
+    "noPhotos": "Wala pang larawan para sa pagtitipon na ito.",
+    "postHappened": "I-post ang nangyari",
+    "happenedBody": "Ang nangyari",
+    "happenedHint": "Masasave ito sa araw na pinili, kasama ang mga larawan.",
+    "addDayPhotos": "Magdagdag ng larawan ng nangyari",
+    "photosAdded": "Naidagdag ang mga larawan sa araw na ito.",
+    "needPhoto": "Maglagay ng kahit isang larawan.",
+    "photoFull": "May 4 na larawan na ang pagtitipon na ito.",
+    "addPhotos": "Mga larawan",
+    "photoHint": "Hanggang 4 na larawan. Kasama ang mga ito sa abiso.",
+    "photoTooBig": "Masyadong malaki ang larawan. Pumili ng mas maliit.",
+    "removePhoto": "Tanggalin ang larawan",
+    "openDay": "Buksan ang araw na ito",
+    "takeAttendance": "Kunin ang attendance",
+    "prevMonth": "Nakaraang buwan",
+    "nextMonth": "Susunod na buwan",
+    "days": {
+      "sun": "Lin",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Miy",
+      "thu": "Huw",
+      "fri": "Biy",
+      "sat": "Sab"
+    }
+  },
+  "attendance": {
+    "title": "Attendance",
+    "lead": "May sariling pahina ang bawat pagtitipon. I-tap ang Narito sa bawat lot na dumalo.",
+    "empty": "Wala pang pagtitipon na may petsa. Maglagay ng petsa kapag nag-post ng anunsyo.",
+    "open": "Buksan ang attendance",
+    "back": "Lahat ng pagtitipon",
+    "notFound": "Hindi nahanap ang pagtitipon na iyon.",
+    "presentCount": "{{count}} ang narito",
+    "present": "Narito",
+    "search": "Hanapin ang lot",
+    "searchPh": "B1-L01",
+    "noLots": "Wala pang aktibong lot.",
+    "noMatch": "Walang lot na tumugma sa hinahanap."
   },
   "documents": {
     "title": "Mga dokumento",

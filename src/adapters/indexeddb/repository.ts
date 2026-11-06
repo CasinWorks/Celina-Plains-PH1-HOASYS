@@ -1,6 +1,8 @@
 import { addMoney, cmpMoney, money, subMoney } from "../../domain/money";
 import type {
   Announcement,
+  AnnouncementPhoto,
+  EventAttendance,
   Ballot,
   DuesCharge,
   Election,
@@ -1002,7 +1004,7 @@ export function createIndexedDbRepository(
     },
 
     async createAnnouncement(input, actor) {
-      if (!actor.roles.includes("officer") && !actor.roles.includes("treasurer")) {
+      if (!canPostNotice(actor)) {
         throw new Error("Only officers or the treasurer can post announcements.");
       }
       const row: Announcement = {
@@ -1011,6 +1013,7 @@ export function createIndexedDbRepository(
         body: input.body.trim(),
         pinned: Boolean(input.pinned),
         eventDate: input.eventDate?.trim() || null,
+        photos: cleanPhotos(input.photos),
         authorUserId: actor.userId,
         authorName: actor.fullName,
         publishedAt: nowIso(),
@@ -1023,7 +1026,7 @@ export function createIndexedDbRepository(
     },
 
     async updateAnnouncement(id, patch, actor) {
-      if (!actor.roles.includes("officer") && !actor.roles.includes("treasurer")) {
+      if (!canPostNotice(actor)) {
         throw new Error("Only officers or the treasurer can edit announcements.");
       }
       const before = await db.announcements.get(id);
@@ -1043,11 +1046,70 @@ export function createIndexedDbRepository(
       return after;
     },
 
+    async addEventPhotos(id, input, actor) {
+      if (!canPostNotice(actor)) {
+        throw new Error("Only officers or the treasurer can edit announcements.");
+      }
+      const before = await db.announcements.get(id);
+      if (!before?.eventDate) throw new Error("That event was not found.");
+      const incoming = cleanPhotos(input.photos);
+      if (incoming.length === 0) throw new Error("Add at least one photo.");
+      const photos = [...(before.photos ?? []), ...incoming];
+      if (photos.length > 4) throw new Error("An announcement can hold up to 4 photos.");
+      const note = input.note?.trim();
+      const after: Announcement = {
+        ...before,
+        photos,
+        body: note ? `${before.body}\n\n${note}` : before.body,
+        updatedAt: nowIso(),
+      };
+      await db.announcements.put(after);
+      return after;
+    },
+
     async deleteAnnouncement(id, actor) {
-      if (!actor.roles.includes("officer") && !actor.roles.includes("treasurer")) {
+      if (!canPostNotice(actor)) {
         throw new Error("Only officers or the treasurer can delete announcements.");
       }
+      const marks = await db.attendances.where("eventId").equals(id).primaryKeys();
+      if (marks.length) await db.attendances.bulkDelete(marks);
       await db.announcements.delete(id);
+    },
+
+    async listEventAttendance(eventId) {
+      const rows = await db.attendances.where("eventId").equals(eventId).toArray();
+      return rows.sort((a, b) => a.lotCode.localeCompare(b.lotCode));
+    },
+
+    async setEventPresent(eventId, lotId, present, actor) {
+      if (!canPostNotice(actor)) {
+        throw new Error("Only officers or the treasurer can take attendance.");
+      }
+      const event = await db.announcements.get(eventId);
+      if (!event?.eventDate) throw new Error("That event was not found.");
+      const lot = await db.lots.get(lotId);
+      if (!lot?.isActive) throw new Error("That lot is not active.");
+      const existing = await db.attendances
+        .where("[eventId+lotId]")
+        .equals([eventId, lotId])
+        .first();
+      if (!present) {
+        if (existing) await db.attendances.delete(existing.id);
+        return null;
+      }
+      if (existing) return existing;
+      const row: EventAttendance = {
+        id: createId("att"),
+        eventId,
+        lotId: lot.id,
+        lotCode: lot.lotCode,
+        householdName: lot.householdName,
+        markedByUserId: actor.userId,
+        markedByName: actor.fullName,
+        markedAt: nowIso(),
+      };
+      await db.attendances.add(row);
+      return row;
     },
 
     async listDocuments() {
@@ -1457,6 +1519,7 @@ export function createIndexedDbRepository(
         db.voterAssignments.clear(),
         db.ballots.clear(),
         db.documents.clear(),
+        db.attendances.clear(),
       ]);
     },
 
@@ -1481,6 +1544,7 @@ export function createIndexedDbRepository(
         voterAssignments: await db.voterAssignments.toArray(),
         ballots: await db.ballots.toArray(),
         documents: await db.documents.toArray(),
+        attendances: await db.attendances.toArray(),
       };
       if (includeFiles) {
         bundle.files = await files.exportAll();
@@ -1517,6 +1581,7 @@ export function createIndexedDbRepository(
       }
       if (bundle.ballots?.length) await db.ballots.bulkPut(bundle.ballots);
       if (bundle.documents?.length) await db.documents.bulkPut(bundle.documents);
+      if (bundle.attendances?.length) await db.attendances.bulkPut(bundle.attendances);
       if (bundle.files) await files.importAll(bundle.files);
       await writeAudit(db, {
         entity: "config",
@@ -1532,6 +1597,30 @@ export function createIndexedDbRepository(
   };
 
   return repo;
+}
+
+function canPostNotice(actor: Session): boolean {
+  return (
+    actor.roles.includes("officer") ||
+    actor.roles.includes("treasurer") ||
+    actor.roles.includes("admin")
+  );
+}
+
+function cleanPhotos(photos: AnnouncementPhoto[] | undefined): AnnouncementPhoto[] {
+  const rows = photos ?? [];
+  if (rows.length > 4) throw new Error("An announcement can hold up to 4 photos.");
+  return rows.map((photo) => {
+    const dataUrl = photo.dataUrl.trim();
+    if (!dataUrl.startsWith("data:image/") || dataUrl.length > 200_000) {
+      throw new Error("That photo is too large. Choose a smaller one.");
+    }
+    return {
+      id: photo.id,
+      mimeType: photo.mimeType || "image/jpeg",
+      dataUrl,
+    };
+  });
 }
 
 /** Hard-delete prevention for verified payments — policy helper for tests/UI. */

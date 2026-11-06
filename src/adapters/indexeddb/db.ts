@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from "dexie";
 import type {
   Announcement,
   Ballot,
+  EventAttendance,
   HoaDocument,
   DuesCharge,
   Election,
@@ -44,6 +45,7 @@ export class HoaDatabase extends Dexie {
   voterAssignments!: EntityTable<VoterAssignment, "id">;
   ballots!: EntityTable<Ballot, "id">;
   documents!: EntityTable<HoaDocument, "id">;
+  attendances!: EntityTable<EventAttendance, "id">;
 
   constructor(name = "celina_plains_p1_hoa") {
     super(name);
@@ -80,6 +82,9 @@ export class HoaDatabase extends Dexie {
     });
     this.version(4).stores({
       documents: "id, category, publishedAt",
+    });
+    this.version(5).stores({
+      attendances: "id, eventId, lotId, [eventId+lotId]",
     });
   }
 }

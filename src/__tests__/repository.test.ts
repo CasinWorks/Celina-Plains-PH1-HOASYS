@@ -493,6 +493,71 @@ describe("IndexedDB repository (Phase 1 money flows)", () => {
     ).rejects.toThrow(/officers or the treasurer/i);
   });
 
+  it("stores photos on a dated announcement", async () => {
+    const officer = await auth.login(DEMO_USERS.officer.username, DEMO_PASSWORD);
+    const photo = {
+      id: "photo_1",
+      mimeType: "image/jpeg",
+      dataUrl: "data:image/jpeg;base64,aaaa",
+    };
+    const row = await repo.createAnnouncement(
+      {
+        title: "Street cleanup",
+        body: "Photos from the morning.",
+        eventDate: "2026-11-06",
+        photos: [photo],
+      },
+      officer,
+    );
+    expect(row.photos).toEqual([photo]);
+    const listed = await repo.listAnnouncements();
+    expect(listed.find((item) => item.id === row.id)?.photos).toEqual([photo]);
+    await expect(
+      repo.createAnnouncement(
+        {
+          title: "Too many",
+          body: "Five photos.",
+          photos: Array.from({ length: 5 }, (_, index) => ({
+            ...photo,
+            id: `photo_${index}`,
+          })),
+        },
+        officer,
+      ),
+    ).rejects.toThrow(/4 photos/i);
+    const added = await repo.addEventPhotos(
+      row.id,
+      {
+        photos: [{ ...photo, id: "photo_2" }],
+        note: "The street was cleared by noon.",
+      },
+      officer,
+    );
+    expect(added.photos).toHaveLength(2);
+    expect(added.body).toContain("The street was cleared by noon.");
+  });
+
+  it("lets an officer tap a lot present for one event", async () => {
+    const officer = await auth.login(DEMO_USERS.officer.username, DEMO_PASSWORD);
+    const event = (await repo.listAnnouncements()).find((row) => row.eventDate);
+    const lot = (await repo.listLots()).find((row) => row.isActive);
+    expect(event).toBeTruthy();
+    expect(lot).toBeTruthy();
+    const marked = await repo.setEventPresent(event!.id, lot!.id, true, officer);
+    expect(marked?.lotId).toBe(lot!.id);
+    expect(await repo.listEventAttendance(event!.id)).toHaveLength(1);
+    await repo.setEventPresent(event!.id, lot!.id, true, officer);
+    expect(await repo.listEventAttendance(event!.id)).toHaveLength(1);
+    expect(await repo.setEventPresent(event!.id, lot!.id, false, officer)).toBeNull();
+    expect(await repo.listEventAttendance(event!.id)).toHaveLength(0);
+    await expect(
+      repo.setEventPresent(event!.id, lot!.id, true, homeowner),
+    ).rejects.toThrow(/officers or the treasurer/i);
+    await repo.setEventPresent(event!.id, lot!.id, true, officer);
+    await repo.deleteAnnouncement(event!.id, officer);
+    expect(await repo.listEventAttendance(event!.id)).toHaveLength(0);
+  });
+
   it("builds monthly payment progress series for officer charts", async () => {
     const series = await repo.monthlyPaymentProgress(2026);
     expect(series).toHaveLength(12);

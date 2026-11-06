@@ -18,11 +18,13 @@ describe("role route guards", () => {
     expect(canAccessRoute(roles, ROUTE_POLICY.audit)).toBe(false);
     expect(canAccessRoute(roles, ROUTE_POLICY.verifyPayment)).toBe(false);
     expect(canAccessRoute(roles, ROUTE_POLICY.lotsManage)).toBe(false);
+    expect(canAccessRoute(roles, ROUTE_POLICY.attendance)).toBe(false);
   });
 
   it("allows officer to view lots but not manage settings/expenses", () => {
     const roles: Role[] = ["officer"];
     expect(canAccessRoute(roles, ROUTE_POLICY.lots)).toBe(true);
+    expect(canAccessRoute(roles, ROUTE_POLICY.attendance)).toBe(true);
     expect(canAccessRoute(roles, ROUTE_POLICY.expenses)).toBe(false);
     expect(canAccessRoute(roles, ROUTE_POLICY.settings)).toBe(false);
   });

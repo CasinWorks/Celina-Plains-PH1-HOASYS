@@ -82,6 +82,13 @@ const NAV: NavItem[] = [
     roles: ["officer", "treasurer"],
   },
   {
+    to: "/attendance",
+    labelKey: "nav.attendance",
+    icon: <IconAudit />,
+    group: "office",
+    roles: ["officer", "treasurer", "admin"],
+  },
+  {
     to: "/expenses",
     labelKey: "nav.expenses",
     icon: <IconExpense />,

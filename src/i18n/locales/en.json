@@ -44,7 +44,8 @@
     "plans": "HOA plans",
     "officers": "2026 candidates",
     "voting": "Voting",
-    "access": "Access"
+    "access": "Access",
+    "attendance": "Attendance"
   },
   "roles": {
     "homeowner": "Homeowner",
@@ -269,7 +270,7 @@
   },
   "announcements": {
     "title": "Announcements",
-    "lead": "Community notices from officers and the treasurer.",
+    "lead": "Notices, photos, and the community calendar. Tap a day to see that gathering and what is coming next.",
     "create": "Post announcement",
     "fieldTitle": "Title",
     "fieldBody": "Message",
@@ -281,7 +282,52 @@
     "deleteConfirm": "Remove this announcement?",
     "empty": "No announcements yet.",
     "eventDate": "Gathering date",
-    "eventDateHint": "Leave blank when the notice is not for a date."
+    "eventDateHint": "Leave blank when the notice is not for a date. A date places it on the calendar.",
+    "feed": "Community feed",
+    "calendar": "Event calendar",
+    "upcoming": "Upcoming event",
+    "happened": "What happened that day",
+    "todayEvent": "Today",
+    "noEvent": "No gathering on this day.",
+    "noPhotos": "No photos for this gathering yet.",
+    "postHappened": "Post what happened",
+    "happenedBody": "What happened",
+    "happenedHint": "Saved on the day you selected, with the photos.",
+    "addDayPhotos": "Add photos of what happened",
+    "photosAdded": "Photos added to this day.",
+    "needPhoto": "Add at least one photo.",
+    "photoFull": "This gathering already has 4 photos.",
+    "addPhotos": "Photos",
+    "photoHint": "Up to 4 photos. They are saved with the notice.",
+    "photoTooBig": "That photo is too large. Choose a smaller one.",
+    "removePhoto": "Remove photo",
+    "openDay": "Open this day",
+    "takeAttendance": "Take attendance",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "days": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    }
+  },
+  "attendance": {
+    "title": "Attendance",
+    "lead": "Each gathering has its own page. Tap Present for every lot that came.",
+    "empty": "No gathering with a date yet. Add a date when you post an announcement.",
+    "open": "Open attendance",
+    "back": "All gatherings",
+    "notFound": "That gathering was not found.",
+    "presentCount": "{{count}} present",
+    "present": "Present",
+    "search": "Find a lot",
+    "searchPh": "B1-L01",
+    "noLots": "No active lots yet.",
+    "noMatch": "No lot matches that search."
   },
   "documents": {
     "title": "Documents",
